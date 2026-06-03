@@ -24,6 +24,7 @@
         "symfony/http-client": "8.0.*",
         "symfony/intl": "8.0.*",
         "symfony/mailer": "8.0.*",
+        "symfony/mercure-bundle": "^0.4.2",
         "symfony/mime": "8.0.*",
         "symfony/monolog-bundle": "^3.0|^4.0",
         "symfony/notifier": "8.0.*",
@@ -37,6 +38,8 @@
         "symfony/string": "8.0.*",
         "symfony/translation": "8.0.*",
         "symfony/twig-bundle": "8.0.*",
+        "symfony/ux-live-component": "^3.0",
+        "symfony/ux-native": "^3.0",
         "symfony/ux-turbo": "^3.0",
         "symfony/validator": "8.0.*",
         "symfony/web-link": "8.0.*",
@@ -104,6 +107,7 @@
         "symfony/debug-bundle": "8.0.*",
         "symfony/maker-bundle": "^1.0",
         "symfony/stopwatch": "8.0.*",
+        "symfony/ux-toolkit": "^3.0",
         "symfony/web-profiler-bundle": "8.0.*"
     }
 }
