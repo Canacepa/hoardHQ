@@ -41,10 +41,15 @@
         "symfony/ux-live-component": "^3.0",
         "symfony/ux-native": "^3.0",
         "symfony/ux-turbo": "^3.0",
+        "symfony/ux-twig-component": "^3.1",
         "symfony/validator": "8.0.*",
         "symfony/web-link": "8.0.*",
         "symfony/yaml": "8.0.*",
+        "symfonycasts/tailwind-bundle": "^0.13.0",
+        "symfonycasts/verify-email-bundle": "^1.18",
+        "tales-from-a-dev/twig-tailwind-extra": "1.0.0",
         "twig/extra-bundle": "^2.12|^3.0",
+        "twig/html-extra": "4.0@alpha",
         "twig/twig": "^2.12|^3.0"
     },
     "config": {
@@ -107,7 +112,7 @@
         "symfony/debug-bundle": "8.0.*",
         "symfony/maker-bundle": "^1.0",
         "symfony/stopwatch": "8.0.*",
-        "symfony/ux-toolkit": "^3.0",
+        "symfony/ux-toolkit": "^3.1",
         "symfony/web-profiler-bundle": "8.0.*"
     }
 }
