@@ -1,19 +1,29 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello HomeController!{% endblock %}
+{% block title %}Bienvenue sur HoardHQ !{% endblock %}
 
 {% block body %}
 <style>
 </style>
 
-<div>
-    <div class="container">
-        <h1>Bienvenue sur HoardHQ!</h1>
-        <p>HoardHQ est une plateforme pour les collectionneurs afin de présenter et gérer leurs collections. Que vous soyez un collectionneur de pièces, un passionné de timbres ou un amateur de jouets, HoardHQ a ce qu'il vous faut.</p>
-        <p>Inscrivez-vous dès aujourd'hui pour commencer à construire votre collection et à vous connecter avec d'autres collectionneurs du monde entier !</p>
+<div class="">
+    <div class="h-dvh flex flex-col xl:flex-row items-center justify-around">
+        <div class="basis-1/3 p-8 flex flex-col items-center justify-center">
+
+            <h1>Bienvenue sur HoardHQ !</h1>
+            <p>HoardHQ est une plateforme pour les collectionneurs afin de présenter et gérer leurs collections. Que vous soyez un collectionneur de pièces, un passionné de timbres ou un amateur de jouets, HoardHQ a ce qu'il vous faut.</p>
+        </div>
+        <div class="basis-1/3 p-8 flex flex-col items-center justify-center">
+            <h2>Créez votre collection</h2>
+
+            <p>Inscrivez-vous dès aujourd'hui pour commencer à construire votre collection et à vous connecter avec d'autres collectionneurs du monde entier !</p>
+            <div class="flex gap-4">
+                <twig:Button variant="link" as="a" href="/login">Connexion</twig:Button>
+                <twig:Button variant="ghost" as="a" href="/register">Inscription</twig:Button>
+            </div>
+        </div>
     </div>
-    <twig:Button variant="outline" as="a" href="/login">Connexion</twig:Button>
-    <twig:Button variant="outline" as="a" href="/register">Inscription</twig:Button>
 
 </div>
+
 {% endblock %}

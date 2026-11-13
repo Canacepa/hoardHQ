@@ -24,7 +24,7 @@ class Collections
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\ManyToOne(inversedBy: 'collections')]
+    #[ORM\ManyToOne(inversedBy: 'collectionsOwned')]
     #[ORM\JoinColumn(nullable: false)]
     private ?user $owner = null;
 
@@ -37,16 +37,19 @@ class Collections
     /**
      * @var Collection<int, user>
      */
-    #[ORM\ManyToMany(targetEntity: user::class, inversedBy: 'contributor')]
+    #[ORM\ManyToMany(targetEntity: user::class, inversedBy: 'collectionsContributor')]
     #[ORM\JoinTable(name: 'collections_contributors')]
     private Collection $contributors;
 
     /**
      * @var Collection<int, user>
      */
-    #[ORM\ManyToMany(targetEntity: user::class, inversedBy: 'collectionviewer')]
+    #[ORM\ManyToMany(targetEntity: user::class, inversedBy: 'collectionsViewer')]
     #[ORM\JoinTable(name: 'collections_viewers')]
     private Collection $viewers;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $thumbnail = null;
 
     public function __construct()
     {
@@ -167,6 +170,18 @@ class Collections
     public function removeViewer(user $viewer): static
     {
         $this->viewers->removeElement($viewer);
+
+        return $this;
+    }
+
+    public function getThumbnail(): ?string
+    {
+        return $this->thumbnail;
+    }
+
+    public function setThumbnail(?string $thumbnail): static
+    {
+        $this->thumbnail = $thumbnail;
 
         return $this;
     }

@@ -151,7 +151,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->collectionsOwned;
     }
 
-    public function addCollectionOwned(Collections $collection): static
+    public function addCollectionsOwned(Collections $collection): static
     {
         if (!$this->collectionsOwned->contains($collection)) {
             $this->collectionsOwned->add($collection);
@@ -161,7 +161,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function removeCollectionOwned(Collections $collection): static
+    public function removeCollectionsOwned(Collections $collection): static
     {
         if ($this->collectionsOwned->removeElement($collection)) {
             // set the owning side to null (unless already changed)

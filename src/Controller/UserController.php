@@ -15,7 +15,8 @@ final class UserController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function index(string $slug, UserRepository $userRepository): Response
     {
-        $user = $userRepository->findOneBy(['slug' => $slug]);
+        $user = $userRepository->findOneBy(['username' => $slug]);
+        
 
         if (!$user) {
         return $this->redirectToRoute('user_404');
