@@ -3,31 +3,48 @@
 {% block title %}Bonjour {{ user.username }}{% endblock %}
 
 {% block body %}
-
-<div class="container">
-    <h1>Bonjour {{ user.username }}!</h1>
-    {% if user.collectionsOwned|length > 0 %}
-        <p>Voici vos collections :</p>
-        <div class="collections flex gap-4">
-            {% for collection in user.collectionsOwned %}
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ collection.name }}</h5>
-                        <p class="card-text">{{ collection.description }}</p>
-                        <a href="/collections/{{ collection.id }}" class="btn btn-primary">Voir la collection</a>
-                    </div>
-                </div>
-            {% endfor %}
+{% set tints = ['var(--clay-accent)', 'var(--clay-sec)', 'var(--clay-sec2)', 'var(--clay-sec3)'] %}
+<main class="flex-1 p-6 md:p-8 flex flex-col gap-6 max-w-6xl w-full">
+    <header class="flex flex-wrap items-center gap-4">
+        <div class="flex-1 min-w-60">
+            <p class="text-xs font-bold text-[var(--clay-ink-soft)]">Bonjour, {{ user.username }}</p>
+            <h1 class="text-3xl md:text-4xl leading-tight">Votre hoard a fière allure.</h1>
         </div>
-    {% else %}
-        <p>Vous n'avez pas encore de collections. Créez-en une dès maintenant !</p>
-    {% endif %}
+        <twig:Button as="a" href="{{ path('app_collections_new') }}" size="lg">+ Ajouter une collection</twig:Button>
+    </header>
 
-    <div>
-        <twig:Button variant="default" as="a" href="/collections/new">+
-                Create Collection
-        </twig:Button>
+    <div class="grid gap-3 grid-cols-2 lg:grid-cols-3">
+        <div class="clay clay-accent col-span-2 lg:col-span-1 !p-5">
+            <p class="text-[10px] font-extrabold uppercase tracking-widest opacity-85">Collections</p>
+            <p class="font-display text-5xl leading-none mt-1">{{ user.collectionsOwned|length }}</p>
+        </div>
+        <div class="clay !p-4">
+            <p class="text-[10px] font-extrabold uppercase tracking-wider text-[var(--clay-ink-faint)]">Contributions</p>
+            <p class="font-display text-3xl leading-none mt-1">{{ user.collectionsContributor|length }}</p>
+        </div>
+        <div class="clay !p-4">
+            <p class="text-[10px] font-extrabold uppercase tracking-wider text-[var(--clay-ink-faint)]">Partagées avec moi</p>
+            <p class="font-display text-3xl leading-none mt-1">{{ user.collectionsViewer|length }}</p>
+        </div>
     </div>
 
-</div>
+    <section class="clay">
+        <h2 class="text-xl mb-4">Vos collections</h2>
+        {% if user.collectionsOwned|length > 0 %}
+            <div class="grid gap-5 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                {% for collection in user.collectionsOwned %}
+                    <a href="{{ path('app_collections_show', {id: collection.id}) }}" class="clay-link-card block">
+                        <div class="clay-cover aspect-[4/3] flex items-end p-3" style="--tint: {{ tints[loop.index0 % tints|length] }}">
+                            <span class="relative z-10 font-display text-4xl leading-none text-white" style="text-shadow: 0 1px 2px rgb(0 0 0 / .3)">{{ collection.name|slice(0, 2)|upper }}</span>
+                        </div>
+                        <p class="mt-2 text-sm font-extrabold truncate">{{ collection.name }}</p>
+                        <p class="text-xs text-[var(--clay-ink-faint)] truncate">{{ collection.description }}</p>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="font-semibold text-[var(--clay-ink-soft)]">Vous n'avez pas encore de collections. Créez-en une dès maintenant !</p>
+        {% endif %}
+    </section>
+</main>
 {% endblock %}
