@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{# Login / register shell: wine brand panel (like the featured hero) + glass form card. Children fill `form`. #}
+{% block body %}
+<div class="mx-auto flex min-h-dvh max-w-5xl items-center p-5 sm:p-8">
+    <div class="glass grid w-full overflow-hidden rounded-[36px] lg:grid-cols-[1fr_1.1fr]">
+        <aside class="relative hidden flex-col justify-between gap-10 overflow-hidden p-10 text-[#fbf3e6] lg:flex" style="background:linear-gradient(135deg,#8a3a44 0%,#722f37 45%,#4a1d24 100%)">
+            <div aria-hidden="true" class="absolute -top-28 -right-16 size-[340px] rounded-full bg-[radial-gradient(circle,rgb(183_168_154/.65),transparent_70%)]"></div>
+            <div aria-hidden="true" class="absolute -bottom-32 left-1/4 size-[300px] rounded-full bg-[radial-gradient(circle,rgb(232_220_198/.28),transparent_70%)]"></div>
+            <a href="{{ path('app_home') }}" class="relative flex items-center gap-3.5">
+                <span class="glass-dark flex size-12 items-center justify-center rounded-2xl font-serif text-2xl font-semibold" aria-hidden="true">H</span>
+                <span class="font-serif text-[25px] font-semibold tracking-tight">Hoard<span class="text-taupe">HQ</span></span>
+            </a>
+            <div class="relative flex flex-col gap-4">
+                <span class="text-xs font-semibold uppercase tracking-[.14em] text-[#fbf3e6]/85">For collectors</span>
+                <h2 class="text-[38px] leading-[1.1]">Everything you keep, within reach.</h2>
+                <p class="text-[#fbf3e6]/90">Catalogue your collections, sort them by category and watch them grow.</p>
+            </div>
+        </aside>
+
+        <main class="flex flex-col justify-center gap-6 p-7 sm:p-10">
+            <a href="{{ path('app_home') }}" class="flex items-center gap-3 lg:hidden">
+                <span class="neu-sm flex size-11 items-center justify-center rounded-2xl font-serif text-xl font-semibold text-wine" aria-hidden="true">H</span>
+                <span class="font-serif text-2xl font-semibold tracking-tight">Hoard<span class="text-wine">HQ</span></span>
+            </a>
+            {% block form %}{% endblock %}
+        </main>
+    </div>
+</div>
+{% endblock %}

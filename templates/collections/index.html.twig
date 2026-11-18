@@ -2,12 +2,12 @@
 
 {% import '_macros/category.html.twig' as cat %}
 
-{% block title %}Collections{% endblock %}
+{% block title %} - Collections{% endblock %}
 
 {% block content %}
 <header class="flex flex-col gap-1.5">
     <h1 class="text-[46px] leading-[1.1]">Collections</h1>
-    <p class="text-[17px] text-muted-ink">Vos collections, classées par catégorie.</p>
+    <p class="text-[17px] text-muted-ink">Your collections, grouped by category.</p>
 </header>
 
 {% for group in groups %}
@@ -18,7 +18,7 @@
                 {{ group.category.name }}
                 <span class="font-sans text-sm font-medium text-muted-ink">{{ group.collections|length }}</span>
             </h2>
-            <a href="{{ path('app_collections_category', {slug: group.category.slug}) }}" class="neu-sm inline-flex h-11 shrink-0 items-center rounded-full px-5 text-sm font-semibold text-wine">Voir toutes les collections</a>
+            <a href="{{ path('app_collections_category', {slug: group.category.slug}) }}" class="neu-sm inline-flex h-11 shrink-0 items-center rounded-full px-5 text-sm font-semibold text-wine">View all collections</a>
         </div>
         <div class="-mx-5 flex gap-6 overflow-x-auto px-5 py-4 [&>*]:w-[240px] [&>*]:shrink-0">
             {% for collection in group.collections %}
@@ -29,10 +29,10 @@
 {% endfor %}
 
 {% if uncategorised %}
-    <section aria-label="Sans catégorie" class="flex flex-col gap-4">
+    <section aria-label="Uncategorised" class="flex flex-col gap-4">
         <h2 class="flex items-center gap-3 text-[24px]">
             <span class="neu-sm flex size-11 items-center justify-center rounded-full text-wine"><twig:ux:icon name="heroicons:tag" class="size-5" /></span>
-            Sans catégorie
+            Uncategorised
             <span class="font-sans text-sm font-medium text-muted-ink">{{ uncategorised|length }}</span>
         </h2>
         <div class="-mx-5 flex gap-6 overflow-x-auto px-5 py-4 [&>*]:w-[240px] [&>*]:shrink-0">
@@ -44,6 +44,6 @@
 {% endif %}
 
 {% if not groups and not uncategorised %}
-    <p class="text-muted-ink">Vous n'avez pas encore de collections. Créez-en une dès maintenant !</p>
+    <p class="text-muted-ink">You don't have any collections yet. Create one now!</p>
 {% endif %}
 {% endblock %}

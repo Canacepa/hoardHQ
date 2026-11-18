@@ -28,6 +28,10 @@ security:
                 # where to redirect after logout
                 # target: app_any_route
 
+            # Opt-in via the "Remember me" checkbox (_remember_me) on the login form
+            remember_me:
+                lifetime: 2592000
+
             # Activate different ways to authenticate:
             # https://symfony.com/doc/current/security.html#the-firewall
 

@@ -1,22 +1,27 @@
-{% extends 'base.html.twig' %}
+{% extends 'layout/auth.html.twig' %}
 
-{% block title %}Inscription{% endblock %}
+{% block title %} - Sign up{% endblock %}
 
-{% block body %}
-<div class="mx-auto flex min-h-dvh max-w-md items-center p-7">
-    <div class="glass w-full rounded-[32px] p-8 [&_input[type=text]]:inset [&_input[type=email]]:inset [&_input[type=password]]:inset [&_input:not([type=checkbox])]:w-full [&_input:not([type=checkbox])]:rounded-full [&_input:not([type=checkbox])]:px-5 [&_input:not([type=checkbox])]:py-3 [&_input]:outline-none [&_label]:text-sm [&_label]:font-semibold [&_div]:mb-3">
-        {% for flash_error in app.flashes('verify_email_error') %}
-            <div role="alert" class="mb-3 rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{{ flash_error }}</div>
-        {% endfor %}
-        <h1 class="mb-4 text-[32px]">Inscription</h1>
-        {{ form_errors(registrationForm) }}
-        {{ form_start(registrationForm) }}
-            {{ form_row(registrationForm.username) }}
-            {{ form_row(registrationForm.email) }}
-            {{ form_row(registrationForm.plainPassword, {label: 'Password'}) }}
-            {{ form_row(registrationForm.agreeTerms) }}
-            <button type="submit" class="wine mt-2 h-[52px] w-full rounded-[18px] font-semibold">S'inscrire</button>
-        {{ form_end(registrationForm) }}
-    </div>
+{% block form %}
+<header class="flex flex-col gap-1.5">
+    <h1 class="text-[36px] leading-[1.1]">Sign up</h1>
+    <p class="text-muted-ink">Create your account to start collecting.</p>
+</header>
+
+{% for flash_error in app.flashes('verify_email_error') %}
+    <div role="alert" class="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{{ flash_error }}</div>
+{% endfor %}
+
+<div class="[&_div]:flex [&_div]:flex-col [&_div]:gap-1.5 [&_form]:flex [&_form]:flex-col [&_form]:gap-4 [&_label]:text-sm [&_label]:font-semibold [&_input:not([type=checkbox])]:inset [&_input:not([type=checkbox])]:h-[54px] [&_input:not([type=checkbox])]:rounded-full [&_input:not([type=checkbox])]:px-5 [&_input:not([type=checkbox])]:outline-none [&_input[type=checkbox]]:size-5 [&_input[type=checkbox]]:accent-wine [&_div:has(>input[type=checkbox])]:flex-row-reverse [&_div:has(>input[type=checkbox])]:items-center [&_div:has(>input[type=checkbox])]:justify-end [&_div:has(>input[type=checkbox])]:gap-3 [&_ul]:text-sm [&_ul]:text-destructive">
+    {{ form_errors(registrationForm) }}
+    {{ form_start(registrationForm) }}
+        {{ form_row(registrationForm.username, {label: "Username"}) }}
+        {{ form_row(registrationForm.email, {label: 'Email'}) }}
+        {{ form_row(registrationForm.plainPassword, {label: 'Password'}) }}
+        {{ form_row(registrationForm.agreeTerms, {label: "I agree to the terms"}) }}
+        <button type="submit" class="wine mt-2 h-14 rounded-[20px] text-base font-semibold">Sign up</button>
+    {{ form_end(registrationForm) }}
 </div>
+
+<p class="text-center text-sm text-muted-ink">Already have an account? <a href="{{ path('app_login') }}" class="font-semibold text-wine underline underline-offset-4">Log in</a></p>
 {% endblock %}

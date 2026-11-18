@@ -1,23 +1,35 @@
-{% extends 'base.html.twig' %}
+{% extends 'layout/auth.html.twig' %}
 
-{% block title %}Connexion{% endblock %}
+{% block title %} - Log in{% endblock %}
 
-{% block body %}
-<div class="mx-auto flex min-h-dvh max-w-md items-center p-7">
-    <form method="post" class="glass flex w-full flex-col gap-4 rounded-[32px] p-8">
-        <h1 class="text-[32px]">Connexion</h1>
-        {% if error %}
-            <div role="alert" class="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-        {% endif %}
-        {% if app.user %}
-            <p class="text-sm">Connecté en tant que {{ app.user.userIdentifier }}, <a class="text-wine underline" href="{{ logout_path() }}">Déconnexion</a></p>
-        {% endif %}
-        <label for="username" class="text-sm font-semibold">Nom d'utilisateur</label>
-        <input type="text" value="{{ last_username }}" name="_username" id="username" class="inset rounded-full px-5 py-3 outline-none" autocomplete="username" required autofocus>
-        <label for="password" class="text-sm font-semibold">Mot de passe</label>
-        <input type="password" name="_password" id="password" class="inset rounded-full px-5 py-3 outline-none" autocomplete="current-password" required>
-        <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
-        <button type="submit" class="wine mt-2 h-[52px] rounded-[18px] font-semibold">Se connecter</button>
-    </form>
-</div>
+{% block form %}
+<header class="flex flex-col gap-1.5">
+    <h1 class="text-[36px] leading-[1.1]">Log in</h1>
+    <p class="text-muted-ink">Welcome back to your collection.</p>
+</header>
+
+<form method="post" class="flex flex-col gap-4">
+    {% if error %}
+        <div role="alert" class="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+    {% endif %}
+    {% if app.user %}
+        <p class="text-sm">Signed in as {{ app.user.userIdentifier }}, <a class="font-semibold text-wine underline" href="{{ logout_path() }}" data-turbo-prefetch="false">Log out</a></p>
+    {% endif %}
+    <div class="flex flex-col gap-1.5">
+        <label for="username" class="text-sm font-semibold">Username</label>
+        <input type="text" value="{{ last_username }}" name="_username" id="username" class="inset h-[54px] rounded-full px-5 outline-none" autocomplete="username" required autofocus>
+    </div>
+    <div class="flex flex-col gap-1.5">
+        <label for="password" class="text-sm font-semibold">Password</label>
+        <input type="password" name="_password" id="password" class="inset h-[54px] rounded-full px-5 outline-none" autocomplete="current-password" required>
+    </div>
+    <div class="flex items-center gap-3">
+        <input type="checkbox" name="_remember_me" id="remember_me" class="size-5 accent-wine">
+        <label for="remember_me" class="text-sm font-semibold">Remember me</label>
+    </div>
+    <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
+    <button type="submit" class="wine mt-2 h-14 rounded-[20px] text-base font-semibold">Log in</button>
+</form>
+
+<p class="text-center text-sm text-muted-ink">No account yet? <a href="{{ path('app_register') }}" class="font-semibold text-wine underline underline-offset-4">Sign up</a></p>
 {% endblock %}

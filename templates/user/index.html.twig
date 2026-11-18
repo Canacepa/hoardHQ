@@ -2,21 +2,21 @@
 
 {% import '_macros/category.html.twig' as cat %}
 
-{% block title %}Bonjour {{ user.username }}{% endblock %}
+{% block title %} - Hello {{ user.username }}{% endblock %}
 
 {% block content %}
 <header class="flex flex-col gap-1.5">
-    <h1 class="text-[46px] leading-[1.1]">Vue d'ensemble</h1>
-    <p class="text-[17px] text-muted-ink">Bonjour {{ user.username }}, tout ce que vous gardez, catalogué et à portée de main.</p>
+    <h1 class="text-[46px] leading-[1.1]">Hello {{ user.username }}</h1>
 </header>
 
 {% set owned = user.collectionsOwned %}
 {% set shared = user.collectionsContributor|merge(user.collectionsViewer) %}
-<section aria-label="Statistiques" class="grid grid-cols-2 gap-6 md:grid-cols-3">
+<section aria-label="Statistics" class="grid grid-cols-2 gap-6 xl:grid-cols-4">
     {% for stat in [
         {label: 'Collections', icon: 'folder', value: owned|length},
         {label: 'Contributions', icon: 'pencil-square', value: user.collectionsContributor|length},
-        {label: 'Partagées avec moi', icon: 'user-group', value: shared|length},
+        {label: 'Followed', icon: 'user-plus', value: shared|length},
+        {label: 'Shared with me', icon: 'user-group', value: shared|length},
     ] %}
         <div class="neu flex flex-col gap-1 rounded-[28px] p-5">
             <span class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] text-muted-ink"><twig:ux:icon name="{{ "heroicons:" ~ stat.icon }}" class="size-4" />{{ stat.label }}</span>
@@ -27,15 +27,15 @@
 
 {% if owned|length %}
 {% set featured = owned|first %}
-<section aria-label="Collection à la une" class="relative flex flex-wrap items-center gap-8 overflow-hidden rounded-[36px] p-9 text-[#fbf3e6]" style="background:linear-gradient(135deg,#8a3a44 0%,#722f37 45%,#4a1d24 100%);box-shadow:12px 12px 28px rgb(114 47 55/.32),-8px -8px 22px rgb(255 252 243/.5)">
+<section aria-label="Featured collection" class="relative flex flex-wrap items-center gap-8 overflow-hidden rounded-[36px] p-9 text-[#fbf3e6]" style="background:linear-gradient(135deg,#8a3a44 0%,#722f37 45%,#4a1d24 100%);box-shadow:12px 12px 28px rgb(114 47 55/.32),-8px -8px 22px rgb(255 252 243/.5)">
     <div aria-hidden="true" class="absolute -top-28 -right-14 size-[360px] rounded-full bg-[radial-gradient(circle,rgb(183_168_154/.65),transparent_70%)]"></div>
     <div class="relative flex min-w-[260px] flex-1 flex-col gap-4">
-        <span class="text-xs font-semibold uppercase tracking-[.14em] text-[#fbf3e6]/85">Collection à la une</span>
+        <span class="text-xs font-semibold uppercase tracking-[.14em] text-[#fbf3e6]/85">Featured collection</span>
         <h2 class="text-[40px] leading-[1.1]">{{ featured.name }}</h2>
         <p class="max-w-md text-base text-[#fbf3e6]/90">{{ featured.description }}</p>
         <div class="mt-1 flex flex-wrap gap-3">
-            <a href="/collections/{{ featured.id }}" class="inline-flex h-[50px] items-center rounded-[18px] bg-sand px-6 text-[15px] font-semibold text-wine shadow-[5px_5px_12px_rgb(30_6_10/.35)]">Ouvrir la collection</a>
-            <a href="/collections/new" class="glass-dark inline-flex h-[50px] items-center rounded-[18px] px-6 text-[15px] font-semibold">Nouvelle collection</a>
+            <a href="/collections/{{ featured.id }}" class="inline-flex h-[50px] items-center rounded-[18px] bg-sand px-6 text-[15px] font-semibold text-wine shadow-[5px_5px_12px_rgb(30_6_10/.35)]">Open collection</a>
+            <a href="/collections/new" class="glass-dark inline-flex h-[50px] items-center rounded-[18px] px-6 text-[15px] font-semibold">New collection</a>
         </div>
     </div>
     {% if featured.category %}
@@ -49,7 +49,7 @@
 <section aria-label="Collections" class="flex flex-col gap-5">
     <div class="flex items-center justify-between gap-4">
         <h2 class="text-[28px]">Collections</h2>
-        <a href="{{ path('app_collections') }}" class="neu-sm inline-flex h-11 items-center rounded-full px-5 text-sm font-semibold text-wine">Voir toutes mes collections</a>
+        <a href="{{ path('app_collections') }}" class="neu-sm inline-flex h-11 items-center rounded-full px-5 text-sm font-semibold text-wine">View all my collections</a>
     </div>
     <div class="grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))]">
         {% for stat in categoryStats %}
@@ -59,7 +59,7 @@
                 </div>
                 <div class="min-w-0">
                     <h3 class="truncate text-[21px]">{{ stat.category.name }}</h3>
-                    <p class="text-sm text-muted-ink">{{ stat.collections }} collection{{ stat.collections > 1 ? 's' : '' }} · {{ stat.category.items|length }} objet{{ stat.category.items|length > 1 ? 's' : '' }}</p>
+                    <p class="text-sm text-muted-ink">{{ stat.collections }} collection{{ stat.collections != 1 ? 's' : '' }} · {{ stat.category.items|length }} item{{ stat.category.items|length != 1 ? 's' : '' }}</p>
                 </div>
             </article>
         {% endfor %}
@@ -67,13 +67,13 @@
 </section>
 
 {% if shared|length %}
-<section aria-label="Partagées avec moi" class="glass flex flex-col gap-4 rounded-[32px] p-7">
-    <h2 class="text-2xl">Partagées avec moi</h2>
+<section aria-label="Shared with me" class="glass flex flex-col gap-4 rounded-[32px] p-7">
+    <h2 class="text-2xl">Shared with me</h2>
     <ul class="flex flex-col gap-3">
         {% for c in shared %}
             <li><a href="/collections/{{ c.id }}" class="flex items-center gap-4 rounded-2xl p-2 hover:bg-white/35">
                 <span class="inset flex size-12 flex-none items-center justify-center rounded-2xl font-serif text-xl text-wine" aria-hidden="true">{{ c.name|first|upper }}</span>
-                <span class="min-w-0"><span class="block truncate font-semibold">{{ c.name }}</span><span class="block text-sm text-muted-ink">Par {{ c.owner.username }}</span></span>
+                <span class="min-w-0"><span class="block truncate font-semibold">{{ c.name }}</span><span class="block text-sm text-muted-ink">By {{ c.owner.username }}</span></span>
             </a></li>
         {% endfor %}
     </ul>

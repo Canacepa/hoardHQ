@@ -20,20 +20,20 @@ class CollectionsFormType extends AbstractType
     {
         $builder
             ->add('name', null, [
-                'label' => 'Nom de la collection',
+                'label' => 'Collection name',
                 'attr' => [
-                    'placeholder' => 'Entrez le nom de la collection',
+                    'placeholder' => 'Enter the collection name',
                 ],
             ])
 
             ->add('description', null, [
-                'label' => 'Description de la collection',
+                'label' => 'Collection description',
                 'attr' => [
-                    'placeholder' => 'Entrez une description pour la collection',
+                    'placeholder' => 'Enter a description for the collection',
                 ],
             ])
             ->add('category', EntityType::class, [
-                'label' => 'Catégorie',
+                'label' => 'Category',
                 'class' => Categories::class,
                 'choice_label' => 'name',
                 'query_builder' => fn (CategoriesRepository $r) => $r->createQueryBuilder('c')
@@ -58,7 +58,7 @@ class CollectionsFormType extends AbstractType
             //     ],
             // ])
             ->add('save', SubmitType::class, [
-                'label' => 'Créer la collection',
+                'label' => 'Create collection',
             ])
         ;
     }

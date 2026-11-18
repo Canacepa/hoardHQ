@@ -1,19 +1,17 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Bienvenue sur HoardHQ !{% endblock %}
-
 {% block body %}
 <div class="mx-auto flex min-h-dvh max-w-5xl flex-col items-center justify-center gap-8 p-7 lg:flex-row">
     <section class="neu flex-1 rounded-[36px] p-9">
-        <h1 class="text-[44px] leading-[1.1]">Bienvenue sur Hoard<span class="text-wine">HQ</span> !</h1>
-        <p class="mt-4 text-[17px] text-muted-ink">HoardHQ est une plateforme pour les collectionneurs afin de présenter et gérer leurs collections. Que vous soyez un collectionneur de pièces, un passionné de timbres ou un amateur de jouets, HoardHQ a ce qu'il vous faut.</p>
+        <h1 class="text-[44px] leading-[1.1]">Welcome to Hoard<span class="text-wine">HQ</span>!</h1>
+        <p class="mt-4 text-[17px] text-muted-ink">HoardHQ is a platform for collectors to showcase and manage their collections. Whether you collect coins, stamps or toys, HoardHQ has what you need.</p>
     </section>
     <section class="glass flex-1 rounded-[36px] p-9">
-        <h2 class="text-[28px]">Créez votre collection</h2>
-        <p class="mt-3 text-muted-ink">Inscrivez-vous dès aujourd'hui pour commencer à construire votre collection et à vous connecter avec d'autres collectionneurs du monde entier !</p>
+        <h2 class="text-[28px]">Create your collection</h2>
+        <p class="mt-3 text-muted-ink">Sign up today to start building your collection and connect with collectors around the world!</p>
         <div class="mt-6 flex flex-wrap gap-3">
-            <twig:Button as="a" href="/register" class="wine h-[50px] rounded-[18px] px-6 text-[15px] font-semibold">Inscription</twig:Button>
-            <twig:Button as="a" href="/login" class="neu-sm h-[50px] rounded-[18px] px-6 text-[15px] font-semibold">Connexion</twig:Button>
+            <twig:Button as="a" href="/register" class="wine h-[50px] rounded-[18px] px-6 text-[15px] font-semibold">Sign up</twig:Button>
+            <twig:Button as="a" href="/login" class="neu-sm h-[50px] rounded-[18px] px-6 text-[15px] font-semibold">Log in</twig:Button>
         </div>
     </section>
 </div>
