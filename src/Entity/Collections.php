@@ -52,11 +52,11 @@ class Collections
     private Collection $followers;
 
     /**
-     * @var Collection<int, Items>
+     * @var Collection<int, CollectionItem>
      */
-    #[ORM\OneToMany(targetEntity: Items::class, mappedBy: 'collection', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: CollectionItem::class, mappedBy: 'collection', orphanRemoval: true)]
     #[ORM\OrderBy(['id' => 'DESC'])]
-    private Collection $items;
+    private Collection $entries;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $thumbnail = null;
@@ -73,7 +73,7 @@ class Collections
         $this->contributors = new ArrayCollection();
         $this->viewers = new ArrayCollection();
         $this->followers = new ArrayCollection();
-        $this->items = new ArrayCollection();
+        $this->entries = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -220,11 +220,11 @@ class Collections
     }
 
     /**
-     * @return Collection<int, Items>
+     * @return Collection<int, CollectionItem>
      */
-    public function getItems(): Collection
+    public function getEntries(): Collection
     {
-        return $this->items;
+        return $this->entries;
     }
 
     public function isPublic(): bool

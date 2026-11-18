@@ -18,17 +18,17 @@
             <span class="text-xs font-semibold uppercase tracking-[.14em] text-[#fbf3e6]/85">Featured collection</span>
             <h2 class="text-[40px] leading-[1.1]">{{ featured.name }}</h2>
             {% if featured.description %}<p class="line-clamp-2 max-w-md text-base text-[#fbf3e6]/90">{{ featured.description }}</p>{% endif %}
-            <p class="text-sm font-medium text-[#fbf3e6]/90">{{ featured.items|length }} item{{ featured.items|length != 1 ? 's' : '' }}{% if featured.visibleCategory %} · {{ featured.visibleCategory.name }}{% endif %}</p>
+            <p class="text-sm font-medium text-[#fbf3e6]/90">{{ featured.entries|length }} item{{ featured.entries|length != 1 ? 's' : '' }}{% if featured.visibleCategory %} · {{ featured.visibleCategory.name }}{% endif %}</p>
             <div class="mt-1 flex flex-wrap gap-3">
                 <twig:Button as="a" variant="cream" size="md" href="{{ path('app_collections_show', {id: featured.id}) }}">Open collection</twig:Button>
                 <twig:Button as="a" variant="glass" size="md" href="{{ path('app_items_new', {id: featured.id}) }}">Add item</twig:Button>
             </div>
         </div>
         <div class="relative flex min-w-[240px] flex-[1_1_300px] flex-col gap-3.5">
-            {% for item in featured.items|slice(0, 3) %}
+            {% for entry in featured.entries|slice(0, 3) %}
                 <div class="glass-dark flex items-center gap-3.5 rounded-[24px] p-3.5 {{ loop.index is even ? 'sm:ml-7' : '' }}">
-                    <span class="flex size-[52px] flex-none items-center justify-center rounded-2xl bg-[#1e060a]/30 font-serif text-2xl font-semibold" aria-hidden="true">{{ item.name|first|upper }}</span>
-                    <span class="min-w-0 truncate font-semibold">{{ item.name }}</span>
+                    <span class="flex size-[52px] flex-none items-center justify-center rounded-2xl bg-[#1e060a]/30 font-serif text-2xl font-semibold" aria-hidden="true">{{ entry.item.name|first|upper }}</span>
+                    <span class="min-w-0 truncate font-semibold">{{ entry.item.name }}</span>
                 </div>
             {% else %}
                 <div class="glass-dark rounded-[24px] p-5 text-[#fbf3e6]/90">No items in this collection yet. Add the first one!</div>
@@ -64,12 +64,12 @@
     <section aria-label="Recently added" class="neu flex min-w-0 flex-[2_1_420px] flex-col gap-5 rounded-[32px] p-7">
         <h2 class="text-2xl">Recently added</h2>
         <ul class="flex flex-col gap-3.5">
-            {% for item in recentItems %}
+            {% for entry in recentEntries %}
                 <li class="flex items-center gap-4">
-                    <span class="inset flex size-14 flex-none items-center justify-center rounded-2xl font-serif text-2xl text-wine" aria-hidden="true">{{ item.name|first|upper }}</span>
+                    <span class="inset flex size-14 flex-none items-center justify-center rounded-2xl font-serif text-2xl text-wine" aria-hidden="true">{{ entry.item.name|first|upper }}</span>
                     <span class="min-w-0">
-                        <span class="block truncate font-semibold">{{ item.name }}</span>
-                        <a href="{{ path('app_collections_show', {id: item.collection.id}) }}" class="block truncate text-sm text-muted-ink underline-offset-2 hover:underline">in {{ item.collection.name }}</a>
+                        <span class="block truncate font-semibold">{{ entry.item.name }}</span>
+                        <a href="{{ path('app_collections_show', {id: entry.collection.id}) }}" class="block truncate text-sm text-muted-ink underline-offset-2 hover:underline">in {{ entry.collection.name }}</a>
                     </span>
                 </li>
             {% else %}

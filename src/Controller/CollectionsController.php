@@ -4,8 +4,9 @@ namespace App\Controller;
 
 use App\Entity\Categories;
 use App\Entity\Collections;
+use App\Entity\CollectionItem;
 use App\Entity\Items;
-use App\Form\ItemsFormType;
+use App\Form\CollectionItemFormType;
 use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -118,14 +119,14 @@ final class CollectionsController extends AbstractController
         }
 
         $q = trim($request->query->getString('q'));
-        $items = $collection->getItems()->toArray();
+        $entries = $collection->getEntries()->toArray();
         if ($q !== '') {
-            $items = array_values(array_filter($items, static fn (Items $i) => false !== mb_stripos($i->getName(), $q)));
+            $entries = array_values(array_filter($entries, static fn (CollectionItem $e) => false !== mb_stripos($e->getItem()->getName(), $q)));
         }
 
         return $this->render('collections/show.html.twig', [
             'q' => $q,
-            'items' => $items,
+            'entries' => $entries,
             'collection' => $collection,
             'isOwner' => $collection->getOwner() === $user,
             'canEdit' => $this->canEdit($collection, $user),
@@ -162,12 +163,12 @@ final class CollectionsController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $item = (new Items())->setCollection($collection);
-        $form = $this->createForm(ItemsFormType::class, $item);
+        $entry = (new CollectionItem())->setCollection($collection)->setItem(new Items());
+        $form = $this->createForm(CollectionItemFormType::class, $entry);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $collection->touch();
-            $em->persist($item);
+            $em->persist($entry);
             $em->flush();
 
             return $this->redirectToRoute('app_collections_show', ['id' => $collection->getId()]);

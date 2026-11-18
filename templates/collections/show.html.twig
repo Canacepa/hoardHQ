@@ -39,7 +39,7 @@
 
 <section aria-label="Items" class="flex flex-col gap-5">
     <div class="flex flex-wrap items-center justify-between gap-4">
-        <h2 class="text-[28px]">Items <span class="text-lg text-muted-ink">({{ q ? items|length ~ ' of ' : '' }}{{ collection.items|length }})</span></h2>
+        <h2 class="text-[28px]">Items <span class="text-lg text-muted-ink">({{ q ? entries|length ~ ' of ' : '' }}{{ collection.entries|length }})</span></h2>
         <form method="get" action="{{ path('app_collections_show', {id: collection.id}) }}" role="search" class="flex min-w-[200px] flex-1 items-center justify-end gap-3 sm:max-w-md">
             <label class="inset flex h-12 min-w-0 flex-1 items-center gap-2.5 rounded-full px-5 text-muted-ink focus-within:ring-2 focus-within:ring-wine/40">
                 <twig:ux:icon name="heroicons:magnifying-glass" class="size-5 shrink-0" />
@@ -53,8 +53,12 @@
         {% endif %}
     </div>
     <ul class="grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr))]">
-        {% for item in items %}
-            <li class="neu rounded-[28px] p-5 font-semibold">{{ item.name }}</li>
+        {% for entry in entries %}
+            <li class="neu rounded-[28px] p-5">
+                <span class="font-semibold">{{ entry.item.name }}</span>
+                {% if entry.condition %}<span class="mt-1 block text-sm text-muted-ink">{{ entry.condition }}</span>{% endif %}
+                {% if entry.notes %}<p class="mt-2 text-sm text-muted-ink">{{ entry.notes }}</p>{% endif %}
+            </li>
         {% else %}
             <li class="col-span-full text-muted-ink">{{ q ? 'No item matches your search.' : 'No items yet.' }}</li>
         {% endfor %}

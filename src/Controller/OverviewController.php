@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Repository\CollectionsRepository;
-use App\Repository\ItemsRepository;
+use App\Repository\CollectionItemRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -14,7 +14,7 @@ final class OverviewController extends AbstractController
 {
     #[Route('/overview', name: 'app_overview')]
     #[IsGranted('ROLE_USER')]
-    public function index(CollectionsRepository $collections, ItemsRepository $items): Response
+    public function index(CollectionsRepository $collections, CollectionItemRepository $entries): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -24,7 +24,7 @@ final class OverviewController extends AbstractController
             'user' => $user,
             'featured' => $mine[0] ?? null,
             'recentCollections' => array_slice($mine, 0, 5),
-            'recentItems' => $items->latestOwnedBy($user, 5),
+            'recentEntries' => $entries->latestOwnedBy($user, 5),
             'fromFollowing' => $collections->latestPublicOf($user->getFollowing(), 5),
         ]);
     }

@@ -5,9 +5,12 @@ namespace App\Entity;
 use App\Repository\ItemsRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ItemsRepository::class)]
+#[ORM\UniqueConstraint(name: 'uniq_item_source_external', columns: ['source', 'external_id'])]
+/** Shared catalog entry: one row per real-world thing. Per-collection data lives on CollectionItem. */
 class Items
 {
     #[ORM\Id]
@@ -18,18 +21,20 @@ class Items
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?int $isbn = null;
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $source = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $externalId = null;
+
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $attributes = null;
 
     /**
      * @var Collection<int, categories>
      */
     #[ORM\ManyToMany(targetEntity: categories::class, inversedBy: 'items')]
     private Collection $categories;
-
-    #[ORM\ManyToOne(inversedBy: 'items')]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
-    private ?Collections $collection = null;
 
     public function __construct()
     {
@@ -39,18 +44,6 @@ class Items
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getCollection(): ?Collections
-    {
-        return $this->collection;
-    }
-
-    public function setCollection(?Collections $collection): static
-    {
-        $this->collection = $collection;
-
-        return $this;
     }
 
     public function getName(): ?string
@@ -65,14 +58,38 @@ class Items
         return $this;
     }
 
-    public function getIsbn(): ?int
+    public function getSource(): ?string
     {
-        return $this->isbn;
+        return $this->source;
     }
 
-    public function setIsbn(?int $isbn): static
+    public function setSource(?string $source): static
     {
-        $this->isbn = $isbn;
+        $this->source = $source;
+
+        return $this;
+    }
+
+    public function getExternalId(): ?string
+    {
+        return $this->externalId;
+    }
+
+    public function setExternalId(?string $externalId): static
+    {
+        $this->externalId = $externalId;
+
+        return $this;
+    }
+
+    public function getAttributes(): ?array
+    {
+        return $this->attributes;
+    }
+
+    public function setAttributes(?array $attributes): static
+    {
+        $this->attributes = $attributes;
 
         return $this;
     }
