@@ -120,6 +120,12 @@ final class UserController extends AbstractController
         $follow ? $me->follow($target) : $me->unfollow($target);
         $em->flush();
 
+        // Go back to the page the button was on (same-site paths only), else to the profile.
+        $back = $request->getPayload()->getString('_back');
+        if (str_starts_with($back, '/') && !str_starts_with($back, '//') && !str_contains($back, '\\')) {
+            return $this->redirect($back);
+        }
+
         return $this->redirectToRoute('user_profile', ['slug' => $target->getUserIdentifier()]);
     }
 

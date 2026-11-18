@@ -46,20 +46,38 @@
         {% else %}
             <div data-controller="dialog" class="min-w-0">
                 <button type="button" data-action="dialog#open" aria-haspopup="dialog" class="{{ tile }}">{{ inner }}</button>
-                <dialog data-dialog-target="dialog" data-action="click->dialog#backdrop" aria-label="{{ stat.label }}" class="neu m-auto w-[min(92vw,420px)] rounded-[32px] p-6 text-ink backdrop:bg-ink/30 backdrop:backdrop-blur-sm">
+                <dialog data-controller="filter" data-dialog-target="dialog" data-action="click->dialog#backdrop" aria-label="{{ stat.label }}" class="neu m-auto h-[min(80vh,640px)] w-[min(92vw,640px)] rounded-[32px] p-8 open:flex open:flex-col text-ink backdrop:bg-ink/30 backdrop:backdrop-blur-sm">
                     <div class="flex items-center justify-between gap-4">
                         <h2 class="text-2xl">{{ stat.label }}</h2>
                         <twig:Button variant="neu" size="pill" data-action="dialog#close">Close</twig:Button>
                     </div>
-                    <ul class="mt-4 flex max-h-[60vh] flex-col gap-2 overflow-y-auto p-1">
+                    {% if stat.users|length %}
+                        <label class="inset mt-4 flex h-11 items-center gap-2.5 rounded-full px-4 text-muted-ink focus-within:ring-2 focus-within:ring-wine/40">
+                            <twig:ux:icon name="heroicons:magnifying-glass" class="size-5 shrink-0" />
+                            <span class="sr-only">Search {{ stat.label|lower }}</span>
+                            <input type="search" data-filter-target="input" data-action="input->filter#filter" placeholder="Search {{ stat.label|lower }}" class="min-w-0 flex-1 bg-transparent text-base text-ink outline-none placeholder:text-muted-ink/80">
+                        </label>
+                    {% endif %}
+                    <ul class="mt-4 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto p-1">
                         {% for u in stat.users %}
-                            <li><a href="{{ path('user_profile', {slug: u.username}) }}" class="flex items-center gap-4 rounded-2xl p-2 hover:bg-white/35">
-                                <span class="inset flex size-12 flex-none items-center justify-center rounded-2xl font-serif text-xl text-wine" aria-hidden="true">{{ u.username|first|upper }}</span>
-                                <span class="min-w-0 truncate font-semibold">{{ u.username }}</span>
-                            </a></li>
+                            <li data-filter-target="item" class="flex items-center gap-3 rounded-2xl p-2 hover:bg-white/35">
+                                <a href="{{ path('user_profile', {slug: u.username}) }}" class="flex min-w-0 flex-1 items-center gap-4">
+                                    <span class="inset flex size-14 flex-none items-center justify-center rounded-2xl font-serif text-2xl text-wine" aria-hidden="true">{{ u.username|first|upper }}</span>
+                                    <span class="min-w-0 truncate text-lg font-semibold">{{ u.username }}</span>
+                                </a>
+                                {% if u != app.user %}
+                                    {% set iFollow = app.user.following.contains(u) %}
+                                    <form method="post" action="{{ path(iFollow ? 'user_unfollow' : 'user_follow', {slug: u.username}) }}" class="flex-none">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('follow-user-' ~ u.id) }}">
+                                        <input type="hidden" name="_back" value="{{ app.request.requestUri }}">
+                                        <twig:Button type="submit" variant="{{ iFollow ? 'neu' : 'wine' }}" size="pill" class="h-10 px-4 text-sm">{{ iFollow ? 'Unfollow' : (u.following.contains(app.user) ? 'Follow back' : 'Follow') }}</twig:Button>
+                                    </form>
+                                {% endif %}
+                            </li>
                         {% else %}
                             <li class="p-2 text-muted-ink">Nobody yet.</li>
                         {% endfor %}
+                        <li data-filter-target="empty" hidden class="p-2 text-muted-ink">Nobody matches your search.</li>
                     </ul>
                 </dialog>
             </div>
