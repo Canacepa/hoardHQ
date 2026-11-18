@@ -5,6 +5,7 @@
 {% block content %}
 <header class="flex flex-wrap items-center justify-between gap-4">
     <h1 class="text-[46px] leading-[1.1]">Your collections</h1>
+    {% include 'collections/_search.html.twig' with {action: path('app_collections'), view: view, category: category, q: q, label: 'Search your collections'} only %}
     {% include 'collections/_view_toggle.html.twig' with {view: view, categories: categories, category: category} only %}
 </header>
 

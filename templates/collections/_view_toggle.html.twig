@@ -10,6 +10,7 @@
             </summary>
             <form method="get" action="{{ action }}" class="neu absolute right-0 top-full z-20 mt-3 flex w-64 flex-col gap-3 rounded-[24px] p-4">
                 <input type="hidden" name="view" value="{{ view }}">
+                {% if app.request.query.getString('q') %}<input type="hidden" name="q" value="{{ app.request.query.getString('q') }}">{% endif %}
                 <fieldset class="flex max-h-64 flex-col gap-1 overflow-y-auto">
                     <legend class="mb-2 text-sm font-semibold">Categories</legend>
                     {% for c in categories %}

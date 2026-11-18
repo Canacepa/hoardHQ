@@ -12,6 +12,7 @@
         <h1 class="text-[46px] leading-[1.1]">{{ title }}</h1>
         <p class="text-[17px] text-muted-ink">{{ isSelf ? 'Yours' : 'By ' ~ user.username }} · {{ collections|length }} collection{{ collections|length != 1 ? 's' : '' }}</p>
     </div>
+    {% include 'collections/_search.html.twig' with {action: path('user_collections', {slug: user.username, type: type}), view: view, category: category, q: q, label: 'Search collections'} only %}
     {% include 'collections/_view_toggle.html.twig' with {view: view, categories: categories, category: category} only %}
 </header>
 

@@ -74,8 +74,13 @@ final class UserController extends AbstractController
         $categories = $grouper->categories($collections);
         $category = array_values(array_filter((array) ($request->query->all()['category'] ?? []), 'is_string'));
         $collections = $grouper->filter($collections, $category);
+        $q = trim($request->query->getString('q'));
+        if ($q !== '') {
+            $collections = array_values(array_filter($collections, static fn (Collections $c) => false !== mb_stripos($c->getName() . ' ' . $c->getDescription() . ' ' . $c->getOwner()->getUsername(), $q)));
+        }
 
         return $this->render('user/collections.html.twig', [
+            'q' => $q,
             'user' => $user,
             'isSelf' => $isSelf,
             'title' => $title,

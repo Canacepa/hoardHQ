@@ -30,8 +30,13 @@ final class CollectionsController extends AbstractController
         $all = $this->latestFirst($user->getCollectionsOwned()->toArray());
         $category = array_values(array_filter((array) ($request->query->all()['category'] ?? []), 'is_string'));
         $collections = $grouper->filter($all, $category);
+        $q = trim($request->query->getString('q'));
+        if ($q !== '') {
+            $collections = array_values(array_filter($collections, static fn (Collections $c) => false !== mb_stripos($c->getName() . ' ' . $c->getDescription(), $q)));
+        }
 
         return $this->render('collections/index.html.twig', [
+            'q' => $q,
             'collections' => $collections,
             'categories' => $grouper->categories($all),
             'category' => $category,
