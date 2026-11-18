@@ -38,17 +38,25 @@
 </section>
 
 <section aria-label="Items" class="flex flex-col gap-5">
-    <div class="flex items-center justify-between gap-4">
-        <h2 class="text-[28px]">Items <span class="text-lg text-muted-ink">({{ collection.items|length }})</span></h2>
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <h2 class="text-[28px]">Items <span class="text-lg text-muted-ink">({{ q ? items|length ~ ' of ' : '' }}{{ collection.items|length }})</span></h2>
+        <form method="get" action="{{ path('app_collections_show', {id: collection.id}) }}" role="search" class="flex min-w-[200px] flex-1 items-center justify-end gap-3 sm:max-w-md">
+            <label class="inset flex h-12 min-w-0 flex-1 items-center gap-2.5 rounded-full px-5 text-muted-ink focus-within:ring-2 focus-within:ring-wine/40">
+                <twig:ux:icon name="heroicons:magnifying-glass" class="size-5 shrink-0" />
+                <span class="sr-only">Search items</span>
+                <input type="search" name="q" value="{{ q }}" placeholder="Search items" class="min-w-0 flex-1 bg-transparent text-base text-ink outline-none placeholder:text-muted-ink/80">
+            </label>
+            {% if q %}<twig:Button as="a" variant="link" href="{{ path('app_collections_show', {id: collection.id}) }}" class="h-auto px-0 font-semibold text-wine">Clear</twig:Button>{% endif %}
+        </form>
         {% if canEdit %}
             <twig:Button as="a" variant="wine" size="md" href="{{ path('app_items_new', {id: collection.id}) }}"><twig:ux:icon name="heroicons:plus" class="size-5" />Add item</twig:Button>
         {% endif %}
     </div>
     <ul class="grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr))]">
-        {% for item in collection.items %}
+        {% for item in items %}
             <li class="neu rounded-[28px] p-5 font-semibold">{{ item.name }}</li>
         {% else %}
-            <li class="col-span-full text-muted-ink">No items yet.</li>
+            <li class="col-span-full text-muted-ink">{{ q ? 'No item matches your search.' : 'No items yet.' }}</li>
         {% endfor %}
     </ul>
 </section>

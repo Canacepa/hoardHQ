@@ -105,7 +105,7 @@ final class CollectionsController extends AbstractController
 
     #[Route('/collections/{id}', name: 'app_collections_show', requirements: ['id' => '\d+'])]
     #[IsGranted('ROLE_USER')]
-    public function show(Collections $collection): Response
+    public function show(Collections $collection, Request $request): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -117,7 +117,15 @@ final class CollectionsController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
+        $q = trim($request->query->getString('q'));
+        $items = $collection->getItems()->toArray();
+        if ($q !== '') {
+            $items = array_values(array_filter($items, static fn (Items $i) => false !== mb_stripos($i->getName(), $q)));
+        }
+
         return $this->render('collections/show.html.twig', [
+            'q' => $q,
+            'items' => $items,
             'collection' => $collection,
             'isOwner' => $collection->getOwner() === $user,
             'canEdit' => $this->canEdit($collection, $user),
