@@ -19,7 +19,7 @@
         {{ form_row(registrationForm.email, {label: 'Email'}) }}
         {{ form_row(registrationForm.plainPassword, {label: 'Password'}) }}
         {{ form_row(registrationForm.agreeTerms, {label: "I agree to the terms"}) }}
-        <button type="submit" class="wine mt-2 h-14 rounded-[20px] text-base font-semibold">Sign up</button>
+        <twig:Button type="submit" variant="wine" size="xl" class="mt-2">Sign up</twig:Button>
     {{ form_end(registrationForm) }}
 </div>
 

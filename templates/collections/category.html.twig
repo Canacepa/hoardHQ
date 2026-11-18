@@ -13,7 +13,7 @@
             <p class="text-[17px] text-muted-ink">{{ collections|length }} collection{{ collections|length != 1 ? 's' : '' }}</p>
         </div>
     </div>
-    <a href="{{ path('app_collections') }}" class="neu-sm inline-flex h-11 items-center rounded-full px-5 text-sm font-semibold text-wine">← All collections</a>
+    <twig:Button as="a" variant="neu" size="pill" href="{{ path('app_collections') }}">← All collections</twig:Button>
 </header>
 
 <section aria-label="{{ category.name }}" class="grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr))]">

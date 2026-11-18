@@ -1,0 +1,33 @@
+{# Desktop: labelled sidebar links. Tablet (sm): icon rail (default). With `mobile`: floating bottom pill for phones (iOS artboard). #}
+{%- props mobile = false -%}
+{% if app.user %}
+{% set route = app.current_route %}
+{% set items = [
+    {route: 'user_profile', url: path('user_profile', {slug: app.user.userIdentifier}), icon: 'home', label: 'Overview'},
+    {route: 'app_collections', url: path('app_collections'), icon: 'squares-2x2', label: 'Collections'},
+    {route: 'app_browse', url: path('app_browse'), icon: 'globe-alt', label: 'Browse'},
+] %}
+
+{% if not mobile %}
+<nav aria-label="Main" class="hidden flex-col gap-2 sm:flex">
+    {% set base = 'flex h-[52px] items-center justify-center gap-3.5 whitespace-nowrap rounded-[18px] sm:w-[52px] sm:self-center lg:w-auto lg:self-stretch lg:justify-start lg:px-4' %}
+    {% for item in items %}
+        {% set current = route == item.route %}
+        <a href="{{ item.url }}" title="{{ item.label }}" aria-label="{{ item.label }}" {% if current %}aria-current="page"{% endif %} class="{{ base }} {{ current ? 'inset font-semibold text-wine' : 'font-medium text-muted-ink hover:bg-white/35' }}"><twig:ux:icon name="heroicons:{{ item.icon }}" class="size-[22px] shrink-0" /><span class="hidden lg:inline">{{ item.label }}</span></a>
+    {% endfor %}
+    <a href="{{ logout_path() }}" data-turbo-prefetch="false" title="Log out" aria-label="Log out" class="{{ base }} font-medium text-muted-ink hover:bg-white/35"><twig:ux:icon name="heroicons:arrow-right-on-rectangle" class="size-[22px] shrink-0" /><span class="hidden lg:inline">Log out</span></a>
+</nav>
+{% else %}
+<nav aria-label="Main" class="glass fixed inset-x-4 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-20 flex h-[72px] items-center justify-around rounded-[36px] px-2.5 sm:hidden">
+    {% set pill = 'flex size-[52px] items-center justify-center rounded-full' %}
+    {% for item in items|slice(0, 2) %}
+        {% set current = route == item.route %}
+        <a href="{{ item.url }}" aria-label="{{ item.label }}" {% if current %}aria-current="page"{% endif %} class="{{ pill }} {{ current ? 'inset text-wine' : 'text-muted-ink' }}"><twig:ux:icon name="heroicons:{{ item.icon }}" class="size-6" /></a>
+    {% endfor %}
+    <twig:Button as="a" variant="wine" href="{{ path('app_collections_new') }}" aria-label="New collection" class="size-[58px] rounded-full p-0"><twig:ux:icon name="heroicons:plus" class="size-6" /></twig:Button>
+    {% set item = items[2] %}
+    <a href="{{ item.url }}" aria-label="{{ item.label }}" {% if route == item.route %}aria-current="page"{% endif %} class="{{ pill }} {{ route == item.route ? 'inset text-wine' : 'text-muted-ink' }}"><twig:ux:icon name="heroicons:{{ item.icon }}" class="size-6" /></a>
+    <a href="{{ logout_path() }}" data-turbo-prefetch="false" aria-label="Log out" class="{{ pill }} text-muted-ink"><twig:ux:icon name="heroicons:arrow-right-on-rectangle" class="size-6" /></a>
+</nav>
+{% endif %}
+{% endif %}

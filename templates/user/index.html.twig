@@ -15,11 +15,11 @@
     {% for stat in [
         {label: 'Collections', icon: 'folder', value: owned|length},
         {label: 'Contributions', icon: 'pencil-square', value: user.collectionsContributor|length},
-        {label: 'Followed', icon: 'user-plus', value: shared|length},
+        {label: 'Followed', icon: 'user-plus', value: user.collectionsFollowed|length},
         {label: 'Shared with me', icon: 'user-group', value: shared|length},
     ] %}
-        <div class="neu flex flex-col gap-1 rounded-[28px] p-5">
-            <span class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] text-muted-ink"><twig:ux:icon name="{{ "heroicons:" ~ stat.icon }}" class="size-4" />{{ stat.label }}</span>
+        <div class="neu flex min-w-0 flex-col gap-1 rounded-[28px] p-4 sm:p-5">
+            <span class="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[.06em] sm:text-xs sm:tracking-[.14em] text-muted-ink"><twig:ux:icon name="{{ "heroicons:" ~ stat.icon }}" class="size-4" />{{ stat.label }}</span>
             <span class="font-serif text-4xl font-semibold text-wine">{{ stat.value }}</span>
         </div>
     {% endfor %}
@@ -34,8 +34,8 @@
         <h2 class="text-[40px] leading-[1.1]">{{ featured.name }}</h2>
         <p class="max-w-md text-base text-[#fbf3e6]/90">{{ featured.description }}</p>
         <div class="mt-1 flex flex-wrap gap-3">
-            <a href="/collections/{{ featured.id }}" class="inline-flex h-[50px] items-center rounded-[18px] bg-sand px-6 text-[15px] font-semibold text-wine shadow-[5px_5px_12px_rgb(30_6_10/.35)]">Open collection</a>
-            <a href="/collections/new" class="glass-dark inline-flex h-[50px] items-center rounded-[18px] px-6 text-[15px] font-semibold">New collection</a>
+            <twig:Button as="a" variant="cream" size="md" href="/collections/{{ featured.id }}">Open collection</twig:Button>
+            <twig:Button as="a" variant="glass" size="md" href="/collections/new">New collection</twig:Button>
         </div>
     </div>
     {% if featured.category %}
@@ -48,14 +48,14 @@
 
 <section aria-label="Collections" class="flex flex-col gap-5">
     <div class="flex items-center justify-between gap-4">
-        <h2 class="text-[28px]">Collections</h2>
-        <a href="{{ path('app_collections') }}" class="neu-sm inline-flex h-11 items-center rounded-full px-5 text-sm font-semibold text-wine">View all my collections</a>
+        <h2 class="text-[28px]">My collections</h2>
+        <twig:Button as="a" variant="neu" size="pill" href="{{ path('app_collections') }}">See all</twig:Button>
     </div>
     <div class="grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))]">
         {% for stat in categoryStats %}
             <article class="neu flex flex-col gap-4 rounded-[28px] p-5">
                 <div class="inset flex h-[124px] items-center justify-center rounded-[20px]" aria-hidden="true">
-                    <span class="neu-sm flex size-[72px] items-center justify-center rounded-full text-wine"><twig:ux:icon name="{{ cat.icon(stat.category.name) }}" class="size-8" /></span>
+                    <span class="flex size-[72px] items-center justify-center rounded-full text-wine"><twig:ux:icon name="{{ cat.icon(stat.category.name) }}" class="size-15" /></span>
                 </div>
                 <div class="min-w-0">
                     <h3 class="truncate text-[21px]">{{ stat.category.name }}</h3>

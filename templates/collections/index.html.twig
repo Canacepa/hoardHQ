@@ -6,8 +6,7 @@
 
 {% block content %}
 <header class="flex flex-col gap-1.5">
-    <h1 class="text-[46px] leading-[1.1]">Collections</h1>
-    <p class="text-[17px] text-muted-ink">Your collections, grouped by category.</p>
+    <h1 class="text-[46px] leading-[1.1]">Your collections</h1>
 </header>
 
 {% for group in groups %}
@@ -18,7 +17,7 @@
                 {{ group.category.name }}
                 <span class="font-sans text-sm font-medium text-muted-ink">{{ group.collections|length }}</span>
             </h2>
-            <a href="{{ path('app_collections_category', {slug: group.category.slug}) }}" class="neu-sm inline-flex h-11 shrink-0 items-center rounded-full px-5 text-sm font-semibold text-wine">View all collections</a>
+            <twig:Button as="a" variant="neu" size="pill" href="{{ path('app_collections_category', {slug: group.category.slug}) }}" class="shrink-0">See all</twig:Button>
         </div>
         <div class="-mx-5 flex gap-6 overflow-x-auto px-5 py-4 [&>*]:w-[240px] [&>*]:shrink-0">
             {% for collection in group.collections %}

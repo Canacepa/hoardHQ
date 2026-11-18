@@ -1,5 +1,5 @@
-{# @prop variant 'default'|'secondary'|'destructive'|'outline'|'ghost'|'link' The visual style variant. Defaults to `default` #}
-{# @prop size 'default'|'xs'|'sm'|'lg'|'icon'|'icon-xs'|'icon-sm'|'icon-lg' The button size. Defaults to `default` #}
+{# @prop variant 'default'|'secondary'|'destructive'|'outline'|'ghost'|'link'|'wine'|'neu'|'cream'|'glass' The visual style variant. Defaults to `default`. wine/neu/cream/glass are the neumorphic/glass looks #}
+{# @prop size 'default'|'xs'|'sm'|'lg'|'icon'|'icon-xs'|'icon-sm'|'icon-lg'|'pill'|'md'|'xl' The button size. Defaults to `default`. pill/md/xl are the app's rounded sizes #}
 {# @prop as 'button' The HTML tag to render. Defaults to `button` #}
 {# @block content The button label and/or icon #}
 {%- props variant = 'default', size = 'default', as = 'button' -%}
@@ -13,6 +13,10 @@
             outline: 'border-border bg-background hover:bg-muted hover:text-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 aria-expanded:bg-muted aria-expanded:text-foreground',
             ghost: 'hover:bg-muted hover:text-foreground dark:hover:bg-muted/50 aria-expanded:bg-muted aria-expanded:text-foreground',
             link: 'text-primary underline-offset-4 hover:underline',
+            wine: 'border-0 bg-linear-145 from-[#8a3a44] via-wine via-55% to-[#5f2630] text-primary-foreground nm-protrude-sm nm-shadow-wine/60 nm-highlight-white/90 nm-distance-[11.3px] nm-blur-[18px]',
+            neu: 'border-0 bg-sand text-wine nm-protrude-sm nm-shadow-taupe/85 nm-highlight-cream/50 nm-distance-[7.07px] nm-blur-[11px] hover:bg-sand hover:text-wine',
+            cream: 'border-0 bg-sand text-wine shadow-[5px_5px_12px_rgb(30_6_10/.35)] hover:bg-sand hover:text-wine',
+            glass: 'bg-white/13 border-white/26 backdrop-blur-[20px] backdrop-saturate-[140%] shadow-[0_14px_30px_rgb(40_10_16/.28),inset_0_1px_0_rgb(255_255_255/.3)] hover:text-[#fbf3e6]',
         },
         size: {
             default: 'h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2',
@@ -23,6 +27,9 @@
             'icon-xs': "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
             'icon-sm': 'size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg',
             'icon-lg': 'size-9',
+            pill: 'h-11 gap-2 rounded-full px-5 font-semibold',
+            md: 'h-[50px] gap-2 rounded-[18px] px-6 text-[15px] font-semibold',
+            xl: 'h-14 gap-2.5 rounded-[20px] px-6 text-base font-semibold',
         },
     },
 ) -%}

@@ -58,6 +58,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\ManyToMany(targetEntity: Collections::class, mappedBy: 'viewers')]
     private Collection $collectionsViewer;
 
+    /**
+     * @var Collection<int, Collections>
+     */
+    #[ORM\ManyToMany(targetEntity: Collections::class, mappedBy: 'followers')]
+    private Collection $collectionsFollowed;
+
     #[ORM\Column]
     private bool $isVerified = false;
 
@@ -66,6 +72,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->collectionsOwned = new ArrayCollection();
         $this->collectionsContributor = new ArrayCollection();
         $this->collectionsViewer = new ArrayCollection();
+        $this->collectionsFollowed = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -222,6 +229,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if ($this->collectionsViewer->removeElement($collectionsViewer)) {
             $collectionsViewer->removeViewer($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Collections>
+     */
+    public function getCollectionsFollowed(): Collection
+    {
+        return $this->collectionsFollowed;
+    }
+
+    public function addCollectionsFollowed(Collections $collection): static
+    {
+        if (!$this->collectionsFollowed->contains($collection)) {
+            $this->collectionsFollowed->add($collection);
+            $collection->addFollower($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCollectionsFollowed(Collections $collection): static
+    {
+        if ($this->collectionsFollowed->removeElement($collection)) {
+            $collection->removeFollower($this);
         }
 
         return $this;

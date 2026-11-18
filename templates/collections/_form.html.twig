@@ -1,0 +1,6 @@
+<section class="neu max-w-xl rounded-[32px] p-7 [&_label]:mb-1 [&_label]:block [&_label]:text-sm [&_label]:font-semibold [&_div]:mb-4 [&_:is(input:not([type=checkbox]),textarea,select)]:inset [&_:is(input:not([type=checkbox]),textarea,select)]:w-full [&_:is(input:not([type=checkbox]),textarea,select)]:px-5 [&_:is(input:not([type=checkbox]),textarea,select)]:outline-none [&_:is(input:not([type=checkbox]),textarea,select)]:focus-visible:ring-2 [&_:is(input:not([type=checkbox]),textarea,select)]:focus-visible:ring-wine/40 [&_:is(input:not([type=checkbox]),select)]:h-[54px] [&_:is(input:not([type=checkbox]),select)]:rounded-full [&_textarea]:min-h-28 [&_textarea]:resize-none [&_textarea]:rounded-[24px] [&_textarea]:py-3">
+    {{ form_start(form) }}
+    {{ form_widget(form) }}
+    <twig:Button type="submit" variant="wine" size="md" class="mt-2">{{ submit_label }}</twig:Button>
+    {{ form_end(form) }}
+</section>

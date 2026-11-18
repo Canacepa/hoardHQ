@@ -21,7 +21,7 @@
 @utility neu { @apply bg-sand nm-protrude-md nm-shadow-taupe/85 nm-highlight-cream/50 nm-distance-[12.73px] nm-blur-[20px]; }
 @utility neu-sm { @apply bg-sand nm-protrude-sm nm-shadow-taupe/85 nm-highlight-cream/50 nm-distance-[7.07px] nm-blur-[11px]; }
 @utility inset { @apply bg-sand nm-dent-sm nm-shadow-taupe/85 nm-highlight-cream/50 nm-distance-[7.07px] nm-blur-[11px]; }
-@utility wine { @apply text-primary-foreground nm-protrude-sm nm-shadow-wine/40 nm-highlight-cream/45 nm-distance-[8.5px] nm-blur-[14px]; background: linear-gradient(145deg,#8a3a44,#722f37 55%,#5f2630); }
+@utility wine { @apply text-primary-foreground nm-protrude-sm nm-shadow-wine/60 nm-highlight-white/90 nm-distance-[11.3px] nm-blur-[18px]; background: linear-gradient(145deg,#8a3a44,#722f37 55%,#5f2630); }
 
 /* Glassmorphism */
 @utility glass { background: rgb(255 250 240 / .42); backdrop-filter: blur(24px) saturate(150%); border: 1px solid rgb(255 255 255 / .6); box-shadow: 0 18px 40px rgb(114 47 55 / .16), inset 0 1px 0 rgb(255 255 255 / .7); }

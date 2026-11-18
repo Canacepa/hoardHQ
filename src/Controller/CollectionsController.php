@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Entity\Categories;
 use App\Entity\Collections;
+use App\Entity\Items;
+use App\Form\ItemsFormType;
 use App\Entity\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -12,6 +14,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Form\CollectionsFormType;
 use App\Repository\CategoriesRepository;
+use App\Repository\CollectionsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -44,6 +47,35 @@ final class CollectionsController extends AbstractController
         ]);
     }
 
+    #[Route('/browse', name: 'app_browse')]
+    #[IsGranted('ROLE_USER')]
+    public function browse(CollectionsRepository $repository): Response
+    {
+        $collections = $repository->createQueryBuilder('c')
+            ->andWhere('c.public = true')
+            ->andWhere('c.owner != :me')
+            ->setParameter('me', $this->getUser())
+            ->orderBy('c.updatedAt', 'DESC')
+            ->addOrderBy('c.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        // Most followed first, then most recently updated.
+        $popular = $repository->createQueryBuilder('c')
+            ->leftJoin('c.followers', 'f')
+            ->andWhere('c.public = true')
+            ->andWhere('c.owner != :me')
+            ->setParameter('me', $this->getUser())
+            ->groupBy('c.id')
+            ->orderBy('COUNT(f.id)', 'DESC')
+            ->addOrderBy('c.updatedAt', 'DESC')
+            ->setMaxResults(5)
+            ->getQuery()
+            ->getResult();
+
+        return $this->render('collections/browse.html.twig', ['collections' => $collections, 'popular' => $popular]);
+    }
+
     #[Route('/collections/category/{slug}', name: 'app_collections_category')]
     #[IsGranted('ROLE_USER')]
     public function category(string $slug, CategoriesRepository $categoriesRepository): Response
@@ -66,11 +98,23 @@ final class CollectionsController extends AbstractController
 
     #[Route('/collections/{id}', name: 'app_collections_show', requirements: ['id' => '\d+'])]
     #[IsGranted('ROLE_USER')]
-    public function show(int $id, UserInterface $user): Response
+    public function show(Collections $collection): Response
     {
+        /** @var User $user */
+        $user = $this->getUser();
+        $canView = $collection->isPublic()
+            || $collection->getOwner() === $user
+            || $collection->getContributors()->contains($user)
+            || $collection->getViewers()->contains($user);
+        if (!$canView) {
+            throw $this->createAccessDeniedException();
+        }
+
         return $this->render('collections/show.html.twig', [
-            'collection_id' => $id,
-            'user' => $user,
+            'collection' => $collection,
+            'isOwner' => $collection->getOwner() === $user,
+            'canEdit' => $this->canEdit($collection, $user),
+            'isFollowing' => $collection->getFollowers()->contains($user),
         ]);
     }
 
@@ -86,6 +130,8 @@ final class CollectionsController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $em->persist($collection);
             $em->flush();
+
+            return $this->redirectToRoute('app_collections_show', ['id' => $collection->getId()]);
         }
 
         return $this->render('collections/new.html.twig', [
@@ -93,16 +139,85 @@ final class CollectionsController extends AbstractController
         ]);
     }
 
-    #[Route('/collections/{id}/edit', name: 'app_collections_edit')]
+    #[Route('/collections/{id}/items/new', name: 'app_items_new', requirements: ['id' => '\d+'])]
     #[IsGranted('ROLE_USER')]
-    public function editCollection(int $id, UserInterface $userInterface): Response
+    public function newItem(Collections $collection, Request $request, EntityManagerInterface $em): Response
     {
+        if (!$this->canEdit($collection, $this->getUser())) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $item = (new Items())->setCollection($collection);
+        $form = $this->createForm(ItemsFormType::class, $item);
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $collection->touch();
+            $em->persist($item);
+            $em->flush();
+
+            return $this->redirectToRoute('app_collections_show', ['id' => $collection->getId()]);
+        }
+
+        return $this->render('items/new.html.twig', ['collection' => $collection, 'form' => $form->createView()]);
+    }
+
+    private function canEdit(Collections $collection, ?object $user): bool
+    {
+        return $user !== null && ($collection->getOwner() === $user || $collection->getContributors()->contains($user));
+    }
+
+    #[Route('/collections/{id}/follow', name: 'app_collections_follow', requirements: ['id' => '\d+'], methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function follow(Collections $collection, Request $request, EntityManagerInterface $em): Response
+    {
+        return $this->toggleFollow($collection, $request, $em, true);
+    }
+
+    #[Route('/collections/{id}/unfollow', name: 'app_collections_unfollow', requirements: ['id' => '\d+'], methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function unfollow(Collections $collection, Request $request, EntityManagerInterface $em): Response
+    {
+        return $this->toggleFollow($collection, $request, $em, false);
+    }
+
+    private function toggleFollow(Collections $collection, Request $request, EntityManagerInterface $em, bool $follow): Response
+    {
+        if (!$this->isCsrfTokenValid('follow' . $collection->getId(), $request->getPayload()->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
         /** @var User $user */
-        $user = $userInterface;
-        return $this->render('collections/edit.html.twig', [
-            'collection_id' => $id,
-            'user' => $user,
-        ]);
+        $user = $this->getUser();
+        if ($follow) {
+            // Only public collections can be followed, and not your own.
+            if (!$collection->isPublic() || $collection->getOwner() === $user) {
+                throw $this->createNotFoundException();
+            }
+            $user->addCollectionsFollowed($collection);
+        } else {
+            $user->removeCollectionsFollowed($collection);
+        }
+        $em->flush();
+
+        return $this->redirect($request->headers->get('referer') ?? $this->generateUrl('app_collections'));
+    }
+
+    #[Route('/collections/{id}/edit', name: 'app_collections_edit', requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_USER')]
+    public function editCollection(Collections $collection, Request $request, EntityManagerInterface $em): Response
+    {
+        if (!$this->canEdit($collection, $this->getUser())) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $form = $this->createForm(CollectionsFormType::class, $collection);
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            $em->flush();
+
+            return $this->redirectToRoute('app_collections_show', ['id' => $collection->getId()]);
+        }
+
+        return $this->render('collections/edit.html.twig', ['collection' => $collection, 'form' => $form->createView()]);
     }
 
     /**

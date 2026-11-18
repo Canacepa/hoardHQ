@@ -1,0 +1,9 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %} - Edit {{ collection.name }}{% endblock %}
+
+{% block content %}
+<h1 class="text-[40px]">Edit {{ collection.name }}</h1>
+{% include 'collections/_form.html.twig' with {form: form, submit_label: 'Save changes'} only %}
+<twig:Button as="a" variant="link" href="{{ path('app_collections_show', {id: collection.id}) }}" class="h-auto self-start px-0 font-semibold text-wine">← Back to {{ collection.name }}</twig:Button>
+{% endblock %}

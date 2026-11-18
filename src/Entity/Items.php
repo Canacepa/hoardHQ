@@ -6,10 +6,8 @@ use App\Repository\ItemsRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\UX\Turbo\Attribute\Broadcast;
 
 #[ORM\Entity(repositoryClass: ItemsRepository::class)]
-#[Broadcast]
 class Items
 {
     #[ORM\Id]
@@ -29,6 +27,10 @@ class Items
     #[ORM\ManyToMany(targetEntity: categories::class, inversedBy: 'items')]
     private Collection $categories;
 
+    #[ORM\ManyToOne(inversedBy: 'items')]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    private ?Collections $collection = null;
+
     public function __construct()
     {
         $this->categories = new ArrayCollection();
@@ -37,6 +39,18 @@ class Items
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getCollection(): ?Collections
+    {
+        return $this->collection;
+    }
+
+    public function setCollection(?Collections $collection): static
+    {
+        $this->collection = $collection;
+
+        return $this;
     }
 
     public function getName(): ?string

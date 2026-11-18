@@ -7,10 +7,8 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\UX\Turbo\Attribute\Broadcast;
 
 #[ORM\Entity(repositoryClass: CollectionsRepository::class)]
-#[Broadcast]
 #[ORM\HasLifecycleCallbacks]
 class Collections
 {
@@ -46,8 +44,25 @@ class Collections
     #[ORM\JoinTable(name: 'collections_viewers')]
     private Collection $viewers;
 
+    /**
+     * @var Collection<int, User>
+     */
+    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'collectionsFollowed')]
+    #[ORM\JoinTable(name: 'collections_followers')]
+    private Collection $followers;
+
+    /**
+     * @var Collection<int, Items>
+     */
+    #[ORM\OneToMany(targetEntity: Items::class, mappedBy: 'collection', orphanRemoval: true)]
+    #[ORM\OrderBy(['id' => 'DESC'])]
+    private Collection $items;
+
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $thumbnail = null;
+
+    #[ORM\Column(options: ['default' => false])]
+    private bool $public = false;
 
     #[ORM\Column]
     private \DateTimeImmutable $updatedAt;
@@ -57,6 +72,8 @@ class Collections
         $this->updatedAt = new \DateTimeImmutable();
         $this->contributors = new ArrayCollection();
         $this->viewers = new ArrayCollection();
+        $this->followers = new ArrayCollection();
+        $this->items = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -168,6 +185,50 @@ class Collections
     public function setThumbnail(?string $thumbnail): static
     {
         $this->thumbnail = $thumbnail;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    public function getFollowers(): Collection
+    {
+        return $this->followers;
+    }
+
+    public function addFollower(User $follower): static
+    {
+        if (!$this->followers->contains($follower)) {
+            $this->followers->add($follower);
+        }
+
+        return $this;
+    }
+
+    public function removeFollower(User $follower): static
+    {
+        $this->followers->removeElement($follower);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Items>
+     */
+    public function getItems(): Collection
+    {
+        return $this->items;
+    }
+
+    public function isPublic(): bool
+    {
+        return $this->public;
+    }
+
+    public function setPublic(bool $public): static
+    {
+        $this->public = $public;
 
         return $this;
     }

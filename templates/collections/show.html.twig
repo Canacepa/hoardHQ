@@ -1,0 +1,55 @@
+{% extends 'layout/app.html.twig' %}
+
+{% import '_macros/category.html.twig' as cat %}
+
+{% block title %} - {{ collection.name }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-wrap gap-3">
+    <twig:Button as="a" variant="neu" size="pill" href="{{ path(isOwner ? 'app_collections' : 'app_browse') }}" data-controller="back" data-action="back#go">← Back</twig:Button>
+    {% if isOwner %}
+        <twig:Button as="a" variant="neu" size="pill" href="{{ path('app_collections') }}">All my collections</twig:Button>
+    {% endif %}
+</div>
+
+<section class="neu flex flex-wrap items-center gap-6 rounded-[32px] p-7">
+    <span class="inset flex size-24 flex-none items-center justify-center rounded-[24px] text-wine" aria-hidden="true">
+        {% if collection.category %}<twig:ux:icon name="{{ cat.icon(collection.category.name) }}" class="size-10" />{% else %}<span class="font-serif text-4xl font-semibold">{{ collection.name|first|upper }}</span>{% endif %}
+    </span>
+    <div class="min-w-[240px] flex-1">
+        <h1 class="text-[40px] leading-[1.1]">{{ collection.name }}</h1>
+        <p class="mt-1 text-muted-ink">By {{ collection.owner.username }}{% if collection.category %} · {{ collection.category.name }}{% endif %} · {{ collection.public ? 'Public' : 'Private' }}</p>
+        {% if collection.description %}<p class="mt-3 max-w-2xl">{{ collection.description }}</p>{% endif %}
+    </div>
+    <div class="flex flex-col items-end gap-2">
+        {% if canEdit %}
+            <twig:Button as="a" variant="neu" size="md" href="{{ path('app_collections_edit', {id: collection.id}) }}"><twig:ux:icon name="heroicons:pencil-square" class="size-5" />Edit</twig:Button>
+        {% endif %}
+        {% if not isOwner and (collection.public or isFollowing) %}
+            <form method="post" action="{{ path(isFollowing ? 'app_collections_unfollow' : 'app_collections_follow', {id: collection.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('follow' ~ collection.id) }}">
+                <twig:Button type="submit" variant="{{ isFollowing ? 'neu' : 'wine' }}" size="md">
+                    <twig:ux:icon name="heroicons:user-plus" class="size-5" />{{ isFollowing ? 'Unfollow' : 'Follow' }}
+                </twig:Button>
+            </form>
+        {% endif %}
+        <span class="text-sm text-muted-ink">{{ collection.followers|length }} follower{{ collection.followers|length != 1 ? 's' : '' }}</span>
+    </div>
+</section>
+
+<section aria-label="Items" class="flex flex-col gap-5">
+    <div class="flex items-center justify-between gap-4">
+        <h2 class="text-[28px]">Items <span class="text-lg text-muted-ink">({{ collection.items|length }})</span></h2>
+        {% if canEdit %}
+            <twig:Button as="a" variant="wine" size="md" href="{{ path('app_items_new', {id: collection.id}) }}"><twig:ux:icon name="heroicons:plus" class="size-5" />Add item</twig:Button>
+        {% endif %}
+    </div>
+    <ul class="grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr))]">
+        {% for item in collection.items %}
+            <li class="neu rounded-[28px] p-5 font-semibold">{{ item.name }}</li>
+        {% else %}
+            <li class="col-span-full text-muted-ink">No items yet.</li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}
