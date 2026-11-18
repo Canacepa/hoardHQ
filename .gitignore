@@ -22,3 +22,11 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+
+###> graphify ###
+/graphify-out
+###< graphify ##
+
+###> node ###
+/node_modules/
+###< node ###
