@@ -64,6 +64,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\ManyToMany(targetEntity: Collections::class, mappedBy: 'followers')]
     private Collection $collectionsFollowed;
 
+    /**
+     * Users this user follows.
+     *
+     * @var Collection<int, User>
+     */
+    #[ORM\ManyToMany(targetEntity: self::class, inversedBy: 'followers')]
+    #[ORM\JoinTable(name: 'user_follows')]
+    #[ORM\JoinColumn(name: 'follower_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[ORM\InverseJoinColumn(name: 'followed_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    private Collection $following;
+
+    /**
+     * @var Collection<int, User>
+     */
+    #[ORM\ManyToMany(targetEntity: self::class, mappedBy: 'following')]
+    private Collection $followers;
+
     #[ORM\Column]
     private bool $isVerified = false;
 
@@ -73,6 +90,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->collectionsContributor = new ArrayCollection();
         $this->collectionsViewer = new ArrayCollection();
         $this->collectionsFollowed = new ArrayCollection();
+        $this->following = new ArrayCollection();
+        $this->followers = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -256,6 +275,41 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if ($this->collectionsFollowed->removeElement($collection)) {
             $collection->removeFollower($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    public function getFollowing(): Collection
+    {
+        return $this->following;
+    }
+
+    /**
+     * @return Collection<int, User>
+     */
+    public function getFollowers(): Collection
+    {
+        return $this->followers;
+    }
+
+    public function follow(User $user): static
+    {
+        if ($user !== $this && !$this->following->contains($user)) {
+            $this->following->add($user);
+            $user->followers->add($this);
+        }
+
+        return $this;
+    }
+
+    public function unfollow(User $user): static
+    {
+        if ($this->following->removeElement($user)) {
+            $user->followers->removeElement($this);
         }
 
         return $this;

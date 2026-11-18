@@ -27,11 +27,11 @@
                     <p class="line-clamp-2 max-w-md text-base text-[#fbf3e6]/90">{{ collection.description }}</p>
                     <div class="mt-1 flex flex-wrap items-center gap-3">
                         <twig:Button as="a" variant="cream" size="md" href="{{ path('app_collections_show', {id: collection.id}) }}">Open collection</twig:Button>
-                        <span class="text-sm text-[#fbf3e6]/85">By {{ collection.owner.username }}</span>
+                        <span class="text-sm text-[#fbf3e6]/85">By <a href="{{ path('user_profile', {slug: collection.owner.username}) }}" class="font-semibold underline underline-offset-2">{{ collection.owner.username }}</a></span>
                     </div>
                 </div>
-                {% if collection.category %}
-                <div class="glass-dark relative rounded-[24px] px-5 py-4 font-semibold">{{ collection.category.name }}</div>
+                {% if collection.visibleCategory %}
+                <div class="glass-dark relative rounded-[24px] px-5 py-4 font-semibold">{{ collection.visibleCategory.name }}</div>
                 {% endif %}
             </article>
         {% endfor %}

@@ -2,26 +2,60 @@
 
 {% import '_macros/category.html.twig' as cat %}
 
-{% block title %} - Hello {{ user.username }}{% endblock %}
+{% block title %} - {{ isSelf ? 'Hello ' ~ user.username : user.username }}{% endblock %}
 
 {% block content %}
-<header class="flex flex-col gap-1.5">
-    <h1 class="text-[46px] leading-[1.1]">Hello {{ user.username }}</h1>
+<header class="flex flex-wrap items-center justify-between gap-4">
+    <h1 class="text-[46px] leading-[1.1]">{{ isSelf ? 'Hello ' ~ user.username : user.username }}</h1>
+    {% if not isSelf %}
+        <form method="post" action="{{ path(isFollowing ? 'user_unfollow' : 'user_follow', {slug: user.username}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('follow-user-' ~ user.id) }}">
+            <twig:Button type="submit" variant="{{ isFollowing ? 'neu' : 'wine' }}" size="md"><twig:ux:icon name="heroicons:user-plus" class="size-5" />{{ isFollowing ? 'Unfollow' : 'Follow' }}</twig:Button>
+        </form>
+    {% endif %}
 </header>
 
-{% set owned = user.collectionsOwned %}
-{% set shared = user.collectionsContributor|merge(user.collectionsViewer) %}
-<section aria-label="Statistics" class="grid grid-cols-2 gap-6 xl:grid-cols-4">
+{# `owned` is every collection on your own profile, only the public ones on someone else's. #}
+{% set shared = isSelf ? user.collectionsContributor|merge(user.collectionsViewer) : [] %}
+<section aria-label="Statistics" class="grid grid-cols-2 gap-6 md:grid-cols-3 xl:grid-cols-5">
+    {# Collection stats open a list page, user stats open a modal. Counts only include what the viewer may see. #}
+    {% set contributed = user.collectionsContributor|filter(c => isSelf or c.public) %}
+    {% set followedCollections = user.collectionsFollowed|filter(c => isSelf or c.public) %}
     {% for stat in [
-        {label: 'Collections', icon: 'folder', value: owned|length},
-        {label: 'Contributions', icon: 'pencil-square', value: user.collectionsContributor|length},
-        {label: 'Followed', icon: 'user-plus', value: user.collectionsFollowed|length},
-        {label: 'Shared with me', icon: 'user-group', value: shared|length},
+        {label: 'Collections', icon: 'folder', value: owned|length, href: isSelf ? path('app_collections') : path('user_collections', {slug: user.username, type: 'owned'})},
+        {label: 'Contributions', icon: 'pencil-square', value: contributed|length, href: path('user_collections', {slug: user.username, type: 'contributions'})},
+        {label: 'Followed', icon: 'user-plus', value: followedCollections|length, href: path('user_collections', {slug: user.username, type: 'followed'})},
+        {label: 'Followers', icon: 'users', value: user.followers|length, users: user.followers},
+        {label: 'Following', icon: 'user-group', value: user.following|length, users: user.following},
     ] %}
-        <div class="neu flex min-w-0 flex-col gap-1 rounded-[28px] p-4 sm:p-5">
+        {% set tile = 'neu flex w-full min-w-0 flex-col gap-1 rounded-[28px] p-4 text-left outline-none transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-wine/40 sm:p-5' %}
+        {% set inner %}
             <span class="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[.06em] sm:text-xs sm:tracking-[.14em] text-muted-ink"><twig:ux:icon name="{{ "heroicons:" ~ stat.icon }}" class="size-4" />{{ stat.label }}</span>
             <span class="font-serif text-4xl font-semibold text-wine">{{ stat.value }}</span>
-        </div>
+        {% endset %}
+        {% if stat.href is defined %}
+            <a href="{{ stat.href }}" class="{{ tile }}">{{ inner }}</a>
+        {% else %}
+            <div data-controller="dialog" class="min-w-0">
+                <button type="button" data-action="dialog#open" aria-haspopup="dialog" class="{{ tile }}">{{ inner }}</button>
+                <dialog data-dialog-target="dialog" data-action="click->dialog#backdrop" aria-label="{{ stat.label }}" class="neu m-auto w-[min(92vw,420px)] rounded-[32px] p-6 text-ink backdrop:bg-ink/30 backdrop:backdrop-blur-sm">
+                    <div class="flex items-center justify-between gap-4">
+                        <h2 class="text-2xl">{{ stat.label }}</h2>
+                        <twig:Button variant="neu" size="pill" data-action="dialog#close">Close</twig:Button>
+                    </div>
+                    <ul class="mt-4 flex max-h-[60vh] flex-col gap-2 overflow-y-auto p-1">
+                        {% for u in stat.users %}
+                            <li><a href="{{ path('user_profile', {slug: u.username}) }}" class="flex items-center gap-4 rounded-2xl p-2 hover:bg-white/35">
+                                <span class="inset flex size-12 flex-none items-center justify-center rounded-2xl font-serif text-xl text-wine" aria-hidden="true">{{ u.username|first|upper }}</span>
+                                <span class="min-w-0 truncate font-semibold">{{ u.username }}</span>
+                            </a></li>
+                        {% else %}
+                            <li class="p-2 text-muted-ink">Nobody yet.</li>
+                        {% endfor %}
+                    </ul>
+                </dialog>
+            </div>
+        {% endif %}
     {% endfor %}
 </section>
 
@@ -35,12 +69,12 @@
         <p class="max-w-md text-base text-[#fbf3e6]/90">{{ featured.description }}</p>
         <div class="mt-1 flex flex-wrap gap-3">
             <twig:Button as="a" variant="cream" size="md" href="/collections/{{ featured.id }}">Open collection</twig:Button>
-            <twig:Button as="a" variant="glass" size="md" href="/collections/new">New collection</twig:Button>
+            {% if isSelf %}<twig:Button as="a" variant="glass" size="md" href="/collections/new">New collection</twig:Button>{% endif %}
         </div>
     </div>
-    {% if featured.category %}
+    {% if featured.visibleCategory %}
     <div class="relative flex min-w-[220px] flex-1 flex-col gap-3">
-        <div class="glass-dark rounded-[24px] px-5 py-4 font-semibold">{{ featured.category.name }}</div>
+        <div class="glass-dark rounded-[24px] px-5 py-4 font-semibold">{{ featured.visibleCategory.name }}</div>
     </div>
     {% endif %}
 </section>
@@ -48,12 +82,12 @@
 
 <section aria-label="Collections" class="flex flex-col gap-5">
     <div class="flex items-center justify-between gap-4">
-        <h2 class="text-[28px]">My collections</h2>
-        <twig:Button as="a" variant="neu" size="pill" href="{{ path('app_collections') }}">See all</twig:Button>
+        <h2 class="text-[28px]">{{ isSelf ? 'My collections' : 'Collections' }}</h2>
+        {% if isSelf %}<twig:Button as="a" variant="neu" size="pill" href="{{ path('app_collections') }}">See all</twig:Button>{% endif %}
     </div>
     <div class="grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))]">
         {% for stat in categoryStats %}
-            <article class="neu flex flex-col gap-4 rounded-[28px] p-5">
+            <a href="{{ isSelf ? path('app_collections_category', {slug: stat.category.slug}) : path('user_collections', {slug: user.username, type: 'owned', view: 'grid', category: [stat.category.slug]}) }}" class="neu flex flex-col gap-4 rounded-[28px] p-5 outline-none transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-wine/40">
                 <div class="inset flex h-[124px] items-center justify-center rounded-[20px]" aria-hidden="true">
                     <span class="flex size-[72px] items-center justify-center rounded-full text-wine"><twig:ux:icon name="{{ cat.icon(stat.category.name) }}" class="size-15" /></span>
                 </div>
@@ -61,7 +95,7 @@
                     <h3 class="truncate text-[21px]">{{ stat.category.name }}</h3>
                     <p class="text-sm text-muted-ink">{{ stat.collections }} collection{{ stat.collections != 1 ? 's' : '' }} · {{ stat.category.items|length }} item{{ stat.category.items|length != 1 ? 's' : '' }}</p>
                 </div>
-            </article>
+            </a>
         {% endfor %}
     </div>
 </section>

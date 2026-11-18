@@ -1,0 +1,4 @@
+{# Form theme: renders checkboxes with the Checkbox component. #}
+{% block checkbox_widget -%}
+    {{ component('Checkbox', {id: id, name: full_name, value: value, checked: checked, required: required, disabled: disabled}) }}
+{%- endblock checkbox_widget %}

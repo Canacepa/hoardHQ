@@ -2,6 +2,8 @@
 
 {% block title %} - Sign up{% endblock %}
 
+{% form_theme registrationForm 'form/neu_checkbox.html.twig' %}
+
 {% block form %}
 <header class="flex flex-col gap-1.5">
     <h1 class="text-[36px] leading-[1.1]">Sign up</h1>
@@ -12,7 +14,7 @@
     <div role="alert" class="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{{ flash_error }}</div>
 {% endfor %}
 
-<div class="[&_div]:flex [&_div]:flex-col [&_div]:gap-1.5 [&_form]:flex [&_form]:flex-col [&_form]:gap-4 [&_label]:text-sm [&_label]:font-semibold [&_input:not([type=checkbox])]:inset [&_input:not([type=checkbox])]:h-[54px] [&_input:not([type=checkbox])]:rounded-full [&_input:not([type=checkbox])]:px-5 [&_input:not([type=checkbox])]:outline-none [&_input[type=checkbox]]:size-5 [&_input[type=checkbox]]:accent-wine [&_div:has(>input[type=checkbox])]:flex-row-reverse [&_div:has(>input[type=checkbox])]:items-center [&_div:has(>input[type=checkbox])]:justify-end [&_div:has(>input[type=checkbox])]:gap-3 [&_ul]:text-sm [&_ul]:text-destructive">
+<div class="[&_div]:flex [&_div]:flex-col [&_div]:gap-1.5 [&_form]:flex [&_form]:flex-col [&_form]:gap-4 [&_label]:text-sm [&_label]:font-semibold [&_input:not([type=checkbox])]:inset [&_input:not([type=checkbox])]:h-[54px] [&_input:not([type=checkbox])]:rounded-full [&_input:not([type=checkbox])]:px-5 [&_input:not([type=checkbox])]:outline-none [&_div:has(>input[type=checkbox])]:flex-row-reverse [&_div:has(>input[type=checkbox])]:items-center [&_div:has(>input[type=checkbox])]:justify-end [&_div:has(>input[type=checkbox])]:gap-3 [&_ul]:text-sm [&_ul]:text-destructive">
     {{ form_errors(registrationForm) }}
     {{ form_start(registrationForm) }}
         {{ form_row(registrationForm.username, {label: "Username"}) }}

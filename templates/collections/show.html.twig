@@ -5,20 +5,20 @@
 {% block title %} - {{ collection.name }}{% endblock %}
 
 {% block content %}
-<div class="flex flex-wrap gap-3">
-    <twig:Button as="a" variant="neu" size="pill" href="{{ path(isOwner ? 'app_collections' : 'app_browse') }}" data-controller="back" data-action="back#go">← Back</twig:Button>
+<div class="flex flex-wrap items-center gap-3">
+    <twig:Button as="a" variant="link" href="{{ path(isOwner ? 'app_collections' : 'app_browse') }}" data-controller="back" data-action="back#go" class="h-auto px-0 font-semibold text-wine">← Back</twig:Button>
     {% if isOwner %}
-        <twig:Button as="a" variant="neu" size="pill" href="{{ path('app_collections') }}">All my collections</twig:Button>
+        <twig:Button as="a" variant="link" href="{{ path('app_collections') }}" class="h-auto px-0 font-semibold text-wine">All my collections</twig:Button>
     {% endif %}
 </div>
 
 <section class="neu flex flex-wrap items-center gap-6 rounded-[32px] p-7">
     <span class="inset flex size-24 flex-none items-center justify-center rounded-[24px] text-wine" aria-hidden="true">
-        {% if collection.category %}<twig:ux:icon name="{{ cat.icon(collection.category.name) }}" class="size-10" />{% else %}<span class="font-serif text-4xl font-semibold">{{ collection.name|first|upper }}</span>{% endif %}
+        {% if collection.visibleCategory %}<twig:ux:icon name="{{ cat.icon(collection.visibleCategory.name) }}" class="size-10" />{% else %}<span class="font-serif text-4xl font-semibold">{{ collection.name|first|upper }}</span>{% endif %}
     </span>
     <div class="min-w-[240px] flex-1">
         <h1 class="text-[40px] leading-[1.1]">{{ collection.name }}</h1>
-        <p class="mt-1 text-muted-ink">By {{ collection.owner.username }}{% if collection.category %} · {{ collection.category.name }}{% endif %} · {{ collection.public ? 'Public' : 'Private' }}</p>
+        <p class="mt-1 text-muted-ink">By <a href="{{ path('user_profile', {slug: collection.owner.username}) }}" class="font-semibold text-wine underline underline-offset-2">{{ collection.owner.username }}</a>{% if collection.visibleCategory %} · {{ collection.visibleCategory.name }}{% endif %} · {{ collection.public ? 'Public' : 'Private' }}</p>
         {% if collection.description %}<p class="mt-3 max-w-2xl">{{ collection.description }}</p>{% endif %}
     </div>
     <div class="flex flex-col items-end gap-2">

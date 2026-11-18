@@ -1,0 +1,19 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %} - {{ title }} · {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-wrap gap-3">
+    <twig:Button as="a" variant="link" href="{{ path('user_profile', {slug: user.username}) }}" data-controller="back" data-action="back#go" class="h-auto px-0 font-semibold text-wine">← Back</twig:Button>
+</div>
+
+<header class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex flex-col gap-1.5">
+        <h1 class="text-[46px] leading-[1.1]">{{ title }}</h1>
+        <p class="text-[17px] text-muted-ink">{{ isSelf ? 'Yours' : 'By ' ~ user.username }} · {{ collections|length }} collection{{ collections|length != 1 ? 's' : '' }}</p>
+    </div>
+    {% include 'collections/_view_toggle.html.twig' with {view: view, categories: categories, category: category} only %}
+</header>
+
+{% include 'collections/_list.html.twig' with {collections: collections, groups: groups, uncategorised: uncategorised, view: view, categoryLinks: false, owner: user.username, type: type, empty: 'Nothing here yet.'} only %}
+{% endblock %}

@@ -1,48 +1,12 @@
 {% extends 'layout/app.html.twig' %}
 
-{% import '_macros/category.html.twig' as cat %}
-
 {% block title %} - Collections{% endblock %}
 
 {% block content %}
-<header class="flex flex-col gap-1.5">
+<header class="flex flex-wrap items-center justify-between gap-4">
     <h1 class="text-[46px] leading-[1.1]">Your collections</h1>
+    {% include 'collections/_view_toggle.html.twig' with {view: view, categories: categories, category: category} only %}
 </header>
 
-{% for group in groups %}
-    <section aria-label="{{ group.category.name }}" class="flex flex-col gap-4">
-        <div class="flex items-center justify-between gap-4">
-            <h2 class="flex items-center gap-3 text-[24px]">
-                <span class="neu-sm flex size-11 items-center justify-center rounded-full text-wine"><twig:ux:icon name="{{ cat.icon(group.category.name) }}" class="size-5" /></span>
-                {{ group.category.name }}
-                <span class="font-sans text-sm font-medium text-muted-ink">{{ group.collections|length }}</span>
-            </h2>
-            <twig:Button as="a" variant="neu" size="pill" href="{{ path('app_collections_category', {slug: group.category.slug}) }}" class="shrink-0">See all</twig:Button>
-        </div>
-        <div class="-mx-5 flex gap-6 overflow-x-auto px-5 py-4 [&>*]:w-[240px] [&>*]:shrink-0">
-            {% for collection in group.collections %}
-                {% include 'collections/_card.html.twig' %}
-            {% endfor %}
-        </div>
-    </section>
-{% endfor %}
-
-{% if uncategorised %}
-    <section aria-label="Uncategorised" class="flex flex-col gap-4">
-        <h2 class="flex items-center gap-3 text-[24px]">
-            <span class="neu-sm flex size-11 items-center justify-center rounded-full text-wine"><twig:ux:icon name="heroicons:tag" class="size-5" /></span>
-            Uncategorised
-            <span class="font-sans text-sm font-medium text-muted-ink">{{ uncategorised|length }}</span>
-        </h2>
-        <div class="-mx-5 flex gap-6 overflow-x-auto px-5 py-4 [&>*]:w-[240px] [&>*]:shrink-0">
-            {% for collection in uncategorised %}
-                {% include 'collections/_card.html.twig' %}
-            {% endfor %}
-        </div>
-    </section>
-{% endif %}
-
-{% if not groups and not uncategorised %}
-    <p class="text-muted-ink">You don't have any collections yet. Create one now!</p>
-{% endif %}
+{% include 'collections/_list.html.twig' with {collections: collections, groups: groups, uncategorised: uncategorised, view: view, categoryLinks: true, empty: "You don't have any collections yet. Create one now!"} only %}
 {% endblock %}

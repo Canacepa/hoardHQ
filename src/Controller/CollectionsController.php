@@ -14,6 +14,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Form\CollectionsFormType;
 use App\Repository\CategoriesRepository;
+use App\Service\CollectionGrouper;
 use App\Repository\CollectionsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,29 +23,20 @@ final class CollectionsController extends AbstractController
 {
     #[Route('/collections', name: 'app_collections')]
     #[IsGranted('ROLE_USER')]
-    public function index(): Response
+    public function index(Request $request, CollectionGrouper $grouper): Response
     {
         /** @var User $user */
         $user = $this->getUser();
-
-        // One group per category, plus the uncategorised ones.
-        $groups = [];
-        $uncategorised = [];
-        foreach ($this->latestFirst($user->getCollectionsOwned()->toArray()) as $collection) {
-            $category = $collection->getCategory();
-            if (!$category) {
-                $uncategorised[] = $collection;
-                continue;
-            }
-            $groups[$category->getId()] ??= ['category' => $category, 'collections' => []];
-            $groups[$category->getId()]['collections'][] = $collection;
-        }
-        usort($groups, fn ($a, $b) => strcmp($a['category']->getName(), $b['category']->getName()));
+        $all = $this->latestFirst($user->getCollectionsOwned()->toArray());
+        $category = array_values(array_filter((array) ($request->query->all()['category'] ?? []), 'is_string'));
+        $collections = $grouper->filter($all, $category);
 
         return $this->render('collections/index.html.twig', [
-            'groups' => $groups,
-            'uncategorised' => $uncategorised,
-        ]);
+            'collections' => $collections,
+            'categories' => $grouper->categories($all),
+            'category' => $category,
+            'view' => $request->query->getString('view') === 'grid' ? 'grid' : 'grouped',
+        ] + $grouper->group($collections));
     }
 
     #[Route('/browse', name: 'app_browse')]
@@ -80,7 +72,7 @@ final class CollectionsController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function category(string $slug, CategoriesRepository $categoriesRepository): Response
     {
-        $category = array_find($categoriesRepository->findAll(), fn (Categories $c) => $c->getSlug() === $slug)
+        $category = array_find($categoriesRepository->findBy(['active' => true]), fn (Categories $c) => $c->getSlug() === $slug)
             ?? throw $this->createNotFoundException();
 
         /** @var User $user */

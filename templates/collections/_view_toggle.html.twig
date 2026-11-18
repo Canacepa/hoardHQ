@@ -1,0 +1,34 @@
+{# Category filter (multiple choice) and display switch (grouped / grid) for a collections list.
+   Params: view, categories, category (list of selected slugs). #}
+{% set params = app.request.attributes.get('_route_params')|merge(app.request.query.all) %}
+{% set action = path(app.current_route, app.request.attributes.get('_route_params')) %}
+<div class="flex flex-wrap items-center gap-3">
+    {% if categories|length %}
+        <details class="relative" data-controller="dropdown">
+            <summary class="{{ category|length ? 'inset' : 'neu-sm' }} flex h-11 cursor-pointer list-none items-center gap-2 rounded-full px-5 text-sm font-semibold text-wine outline-none focus-visible:ring-2 focus-visible:ring-wine/40 [&::-webkit-details-marker]:hidden">
+                <twig:ux:icon name="heroicons:funnel" class="size-5" />Filter{% if category|length %} · {{ category|length }}{% endif %}
+            </summary>
+            <form method="get" action="{{ action }}" class="neu absolute right-0 top-full z-20 mt-3 flex w-64 flex-col gap-3 rounded-[24px] p-4">
+                <input type="hidden" name="view" value="{{ view }}">
+                <fieldset class="flex max-h-64 flex-col gap-1 overflow-y-auto">
+                    <legend class="mb-2 text-sm font-semibold">Categories</legend>
+                    {% for c in categories %}
+                        <label class="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-1.5 text-sm hover:bg-white/35">
+                            <twig:Checkbox name="category[]" value="{{ c.slug }}" checked="{{ c.slug in category }}" />
+                            {{ c.name }}
+                        </label>
+                    {% endfor %}
+                </fieldset>
+                <div class="flex items-center justify-between gap-3">
+                    <twig:Button as="a" variant="link" href="{{ path(app.current_route, params|merge({category: null})) }}" class="h-auto px-0 font-semibold text-wine">Clear</twig:Button>
+                    <twig:Button type="submit" variant="wine" size="pill">Apply</twig:Button>
+                </div>
+            </form>
+        </details>
+    {% endif %}
+    <div class="flex gap-3" role="group" aria-label="Display">
+        {% for option in [{view: 'grouped', label: 'By category', icon: 'list-bullet'}, {view: 'grid', label: 'Grid', icon: 'squares-2x2'}] %}
+            <twig:Button as="a" variant="{{ view == option.view ? 'inset' : 'neu' }}" size="pill" href="{{ path(app.current_route, params|merge({view: option.view})) }}" aria-pressed="{{ view == option.view ? 'true' : 'false' }}"><twig:ux:icon name="heroicons:{{ option.icon }}" class="size-5" />{{ option.label }}</twig:Button>
+        {% endfor %}
+    </div>
+</div>

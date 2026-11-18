@@ -122,6 +122,12 @@ class Collections
         return $this->category;
     }
 
+    /** The category to display: null when there is none or it is inactive (inactive categories are never shown). */
+    public function getVisibleCategory(): ?Categories
+    {
+        return $this->category?->isActive() ? $this->category : null;
+    }
+
     public function setCategory(?Categories $category): static
     {
         $this->category = $category;

@@ -1,3 +1,5 @@
+{# Optional param: showCategory (adds the category tag, used by the grid display). #}
+{% import '_macros/category.html.twig' as cat %}
 <a href="/collections/{{ collection.id }}" class="neu group flex flex-col gap-4 rounded-[28px] p-5 transition-transform hover:-translate-y-0.5">
     <div class="inset flex h-[124px] items-center justify-center rounded-[20px]" aria-hidden="true">
         <span class="neu-sm flex size-[72px] items-center justify-center rounded-full font-serif text-4xl font-semibold text-wine">{{ collection.name|first|upper }}</span>
@@ -6,4 +8,7 @@
         <h2 class="truncate text-[21px]">{{ collection.name }}</h2>
         <p class="line-clamp-2 min-h-10 text-sm text-muted-ink">{{ collection.description }}</p>
     </div>
+    {% if showCategory|default(false) and collection.visibleCategory %}
+        <span class="inset inline-flex max-w-full items-center gap-1.5 self-start rounded-full px-3 py-1.5 text-xs font-semibold text-wine"><twig:ux:icon name="{{ cat.icon(collection.visibleCategory.name) }}" class="size-4 shrink-0" /><span class="truncate">{{ collection.visibleCategory.name }}</span></span>
+    {% endif %}
 </a>
