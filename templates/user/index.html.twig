@@ -1,33 +1,82 @@
-{% extends 'base.html.twig' %}
+{% extends 'layout/app.html.twig' %}
+
+{% import '_macros/category.html.twig' as cat %}
 
 {% block title %}Bonjour {{ user.username }}{% endblock %}
 
-{% block body %}
+{% block content %}
+<header class="flex flex-col gap-1.5">
+    <h1 class="text-[46px] leading-[1.1]">Vue d'ensemble</h1>
+    <p class="text-[17px] text-muted-ink">Bonjour {{ user.username }}, tout ce que vous gardez, catalogué et à portée de main.</p>
+</header>
 
-<div class="container">
-    <h1>Bonjour {{ user.username }}!</h1>
-    {% if user.collectionsOwned|length > 0 %}
-        <p>Voici vos collections :</p>
-        <div class="collections flex gap-4">
-            {% for collection in user.collectionsOwned %}
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ collection.name }}</h5>
-                        <p class="card-text">{{ collection.description }}</p>
-                        <a href="/collections/{{ collection.id }}" class="btn btn-primary">Voir la collection</a>
-                    </div>
-                </div>
-            {% endfor %}
+{% set owned = user.collectionsOwned %}
+{% set shared = user.collectionsContributor|merge(user.collectionsViewer) %}
+<section aria-label="Statistiques" class="grid grid-cols-2 gap-6 md:grid-cols-3">
+    {% for stat in [
+        {label: 'Collections', icon: 'folder', value: owned|length},
+        {label: 'Contributions', icon: 'pencil-square', value: user.collectionsContributor|length},
+        {label: 'Partagées avec moi', icon: 'user-group', value: shared|length},
+    ] %}
+        <div class="neu flex flex-col gap-1 rounded-[28px] p-5">
+            <span class="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] text-muted-ink"><twig:ux:icon name="{{ "heroicons:" ~ stat.icon }}" class="size-4" />{{ stat.label }}</span>
+            <span class="font-serif text-4xl font-semibold text-wine">{{ stat.value }}</span>
         </div>
-    {% else %}
-        <p>Vous n'avez pas encore de collections. Créez-en une dès maintenant !</p>
-    {% endif %}
+    {% endfor %}
+</section>
 
-    <div>
-        <twig:Button variant="default" as="a" href="/collections/new">+
-                Create Collection
-        </twig:Button>
+{% if owned|length %}
+{% set featured = owned|first %}
+<section aria-label="Collection à la une" class="relative flex flex-wrap items-center gap-8 overflow-hidden rounded-[36px] p-9 text-[#fbf3e6]" style="background:linear-gradient(135deg,#8a3a44 0%,#722f37 45%,#4a1d24 100%);box-shadow:12px 12px 28px rgb(114 47 55/.32),-8px -8px 22px rgb(255 252 243/.5)">
+    <div aria-hidden="true" class="absolute -top-28 -right-14 size-[360px] rounded-full bg-[radial-gradient(circle,rgb(183_168_154/.65),transparent_70%)]"></div>
+    <div class="relative flex min-w-[260px] flex-1 flex-col gap-4">
+        <span class="text-xs font-semibold uppercase tracking-[.14em] text-[#fbf3e6]/85">Collection à la une</span>
+        <h2 class="text-[40px] leading-[1.1]">{{ featured.name }}</h2>
+        <p class="max-w-md text-base text-[#fbf3e6]/90">{{ featured.description }}</p>
+        <div class="mt-1 flex flex-wrap gap-3">
+            <a href="/collections/{{ featured.id }}" class="inline-flex h-[50px] items-center rounded-[18px] bg-sand px-6 text-[15px] font-semibold text-wine shadow-[5px_5px_12px_rgb(30_6_10/.35)]">Ouvrir la collection</a>
+            <a href="/collections/new" class="glass-dark inline-flex h-[50px] items-center rounded-[18px] px-6 text-[15px] font-semibold">Nouvelle collection</a>
+        </div>
     </div>
+    {% if featured.category %}
+    <div class="relative flex min-w-[220px] flex-1 flex-col gap-3">
+        <div class="glass-dark rounded-[24px] px-5 py-4 font-semibold">{{ featured.category.name }}</div>
+    </div>
+    {% endif %}
+</section>
+{% endif %}
 
-</div>
+<section aria-label="Collections" class="flex flex-col gap-5">
+    <div class="flex items-center justify-between gap-4">
+        <h2 class="text-[28px]">Collections</h2>
+        <a href="{{ path('app_collections') }}" class="neu-sm inline-flex h-11 items-center rounded-full px-5 text-sm font-semibold text-wine">Voir toutes mes collections</a>
+    </div>
+    <div class="grid gap-6 [grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr))]">
+        {% for stat in categoryStats %}
+            <article class="neu flex flex-col gap-4 rounded-[28px] p-5">
+                <div class="inset flex h-[124px] items-center justify-center rounded-[20px]" aria-hidden="true">
+                    <span class="neu-sm flex size-[72px] items-center justify-center rounded-full text-wine"><twig:ux:icon name="{{ cat.icon(stat.category.name) }}" class="size-8" /></span>
+                </div>
+                <div class="min-w-0">
+                    <h3 class="truncate text-[21px]">{{ stat.category.name }}</h3>
+                    <p class="text-sm text-muted-ink">{{ stat.collections }} collection{{ stat.collections > 1 ? 's' : '' }} · {{ stat.category.items|length }} objet{{ stat.category.items|length > 1 ? 's' : '' }}</p>
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+
+{% if shared|length %}
+<section aria-label="Partagées avec moi" class="glass flex flex-col gap-4 rounded-[32px] p-7">
+    <h2 class="text-2xl">Partagées avec moi</h2>
+    <ul class="flex flex-col gap-3">
+        {% for c in shared %}
+            <li><a href="/collections/{{ c.id }}" class="flex items-center gap-4 rounded-2xl p-2 hover:bg-white/35">
+                <span class="inset flex size-12 flex-none items-center justify-center rounded-2xl font-serif text-xl text-wine" aria-hidden="true">{{ c.name|first|upper }}</span>
+                <span class="min-w-0"><span class="block truncate font-semibold">{{ c.name }}</span><span class="block text-sm text-muted-ink">Par {{ c.owner.username }}</span></span>
+            </a></li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
 {% endblock %}

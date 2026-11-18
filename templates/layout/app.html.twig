@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{# Authenticated shell: glass sidebar + content. Child templates fill `content`. #}
+{% block body %}
+<div class="flex h-dvh w-full flex-col gap-7 p-7 lg:flex-row">
+    <aside class="glass flex shrink-0 flex-col gap-7 overflow-y-auto rounded-[32px] p-6 lg:w-72">
+        <a href="{{ path('app_home') }}" class="flex items-center gap-3.5">
+            <span class="neu-sm font-serif text-wine flex size-12 items-center justify-center rounded-2xl text-2xl font-semibold" aria-hidden="true">H</span>
+            <span class="font-serif text-[25px] font-semibold tracking-tight">Hoard<span class="text-wine">HQ</span></span>
+        </a>
+        <nav aria-label="Main" class="flex flex-col gap-2">
+            {% set base = 'flex whitespace-nowrap h-[52px] items-center gap-3.5 rounded-[18px] px-4' %}
+            {% set link = base ~ ' font-medium text-muted-ink hover:bg-white/35' %}
+            {% set active = 'inset ' ~ base ~ ' font-semibold text-wine' %}
+            {% set route = app.current_route %}
+            {% if app.user %}
+            <a href="{{ path('user_profile', {slug: app.user.userIdentifier}) }}" {% if route == 'user_profile' %}aria-current="page"{% endif %} class="{{ route == 'user_profile' ? active : link }}"><twig:ux:icon name="heroicons:home" class="size-[22px]" />Vue d'ensemble</a>
+            <a href="{{ path('app_collections') }}" {% if route == 'app_collections' %}aria-current="page"{% endif %} class="{{ route == 'app_collections' ? active : link }}"><twig:ux:icon name="heroicons:squares-2x2" class="size-[22px]" />Collections</a>
+            {% endif %}
+            {% if app.user %}<a href="{{ logout_path() }}" class="{{ link }}"><twig:ux:icon name="heroicons:arrow-right-on-rectangle" class="size-[22px]" />Déconnexion</a>{% endif %}
+        </nav>
+        <div class="grow"></div>
+        <twig:Button as="a" href="/collections/new" class="wine h-14 rounded-[20px] text-base font-semibold hover:opacity-95 gap-2.5"><twig:ux:icon name="heroicons:plus-circle" class="size-[22px]" />Nouvelle collection</twig:Button>
+    </aside>
+
+    <main class="flex min-h-0 min-w-0 flex-1 flex-col gap-8 overflow-y-auto p-5 [&>*]:shrink-0">
+        {% block content %}{% endblock %}
+    </main>
+</div>
+{% endblock %}

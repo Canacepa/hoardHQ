@@ -1,24 +1,22 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Register{% endblock %}
+{% block title %}Inscription{% endblock %}
 
 {% block body %}
-    {% for flash_error in app.flashes('verify_email_error') %}
-        <div class="alert alert-danger" role="alert">{{ flash_error }}</div>
-    {% endfor %}
-
-    <h1>Register</h1>
-
-    {{ form_errors(registrationForm) }}
-
-    {{ form_start(registrationForm) }}
-        {{ form_row(registrationForm.username) }}
-        {{ form_row(registrationForm.email) }}
-        {{ form_row(registrationForm.plainPassword, {
-            label: 'Password'
-        }) }}
-        {{ form_row(registrationForm.agreeTerms) }}
-
-        <button type="submit" class="btn">Register</button>
-    {{ form_end(registrationForm) }}
+<div class="mx-auto flex min-h-dvh max-w-md items-center p-7">
+    <div class="glass w-full rounded-[32px] p-8 [&_input[type=text]]:inset [&_input[type=email]]:inset [&_input[type=password]]:inset [&_input:not([type=checkbox])]:w-full [&_input:not([type=checkbox])]:rounded-full [&_input:not([type=checkbox])]:px-5 [&_input:not([type=checkbox])]:py-3 [&_input]:outline-none [&_label]:text-sm [&_label]:font-semibold [&_div]:mb-3">
+        {% for flash_error in app.flashes('verify_email_error') %}
+            <div role="alert" class="mb-3 rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{{ flash_error }}</div>
+        {% endfor %}
+        <h1 class="mb-4 text-[32px]">Inscription</h1>
+        {{ form_errors(registrationForm) }}
+        {{ form_start(registrationForm) }}
+            {{ form_row(registrationForm.username) }}
+            {{ form_row(registrationForm.email) }}
+            {{ form_row(registrationForm.plainPassword, {label: 'Password'}) }}
+            {{ form_row(registrationForm.agreeTerms) }}
+            <button type="submit" class="wine mt-2 h-[52px] w-full rounded-[18px] font-semibold">S'inscrire</button>
+        {{ form_end(registrationForm) }}
+    </div>
+</div>
 {% endblock %}

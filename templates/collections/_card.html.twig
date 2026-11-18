@@ -1,0 +1,9 @@
+<a href="/collections/{{ collection.id }}" class="neu group flex flex-col gap-4 rounded-[28px] p-5 transition-transform hover:-translate-y-0.5">
+    <div class="inset flex h-[124px] items-center justify-center rounded-[20px]" aria-hidden="true">
+        <span class="neu-sm flex size-[72px] items-center justify-center rounded-full font-serif text-4xl font-semibold text-wine">{{ collection.name|first|upper }}</span>
+    </div>
+    <div class="min-w-0">
+        <h2 class="truncate text-[21px]">{{ collection.name }}</h2>
+        <p class="line-clamp-2 min-h-10 text-sm text-muted-ink">{{ collection.description }}</p>
+    </div>
+</a>

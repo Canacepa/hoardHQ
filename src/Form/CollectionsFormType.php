@@ -5,6 +5,7 @@ namespace App\Form;
 use App\Entity\Categories;
 use App\Entity\Collections;
 use App\Entity\user;
+use App\Repository\CategoriesRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\AbstractType;
@@ -31,11 +32,14 @@ class CollectionsFormType extends AbstractType
                     'placeholder' => 'Entrez une description pour la collection',
                 ],
             ])
-            // ->add('categories', EntityType::class, [
-            //     'class' => Categories::class,
-            //     'choice_label' => 'id',
-            //     'multiple' => true,
-            // ])
+            ->add('category', EntityType::class, [
+                'label' => 'Catégorie',
+                'class' => Categories::class,
+                'choice_label' => 'name',
+                'query_builder' => fn (CategoriesRepository $r) => $r->createQueryBuilder('c')
+                    ->andWhere('c.active = true')
+                    ->orderBy('c.name'),
+            ])
 
             // ->add('thumbnailFile', FileType::class, [
             //     'label' => 'Thumbnail (Image file)',

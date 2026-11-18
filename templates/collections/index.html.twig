@@ -1,20 +1,49 @@
-{% extends 'base.html.twig' %}
+{% extends 'layout/app.html.twig' %}
 
-{% block title %}Hello CollectionsController!{% endblock %}
+{% import '_macros/category.html.twig' as cat %}
 
-{% block body %}
-<style>
-    .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
-    .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
-</style>
+{% block title %}Collections{% endblock %}
 
-<div class="example-wrapper">
-    <h1>Hello {{ controller_name }}! ✅</h1>
+{% block content %}
+<header class="flex flex-col gap-1.5">
+    <h1 class="text-[46px] leading-[1.1]">Collections</h1>
+    <p class="text-[17px] text-muted-ink">Vos collections, classées par catégorie.</p>
+</header>
 
-    This friendly message is coming from:
-    <ul>
-        <li>Your controller at <code>D:/Code/hoardHQ/src/Controller/CollectionsController.php</code></li>
-        <li>Your template at <code>D:/Code/hoardHQ/templates/collections/index.html.twig</code></li>
-    </ul>
-</div>
+{% for group in groups %}
+    <section aria-label="{{ group.category.name }}" class="flex flex-col gap-4">
+        <div class="flex items-center justify-between gap-4">
+            <h2 class="flex items-center gap-3 text-[24px]">
+                <span class="neu-sm flex size-11 items-center justify-center rounded-full text-wine"><twig:ux:icon name="{{ cat.icon(group.category.name) }}" class="size-5" /></span>
+                {{ group.category.name }}
+                <span class="font-sans text-sm font-medium text-muted-ink">{{ group.collections|length }}</span>
+            </h2>
+            <a href="{{ path('app_collections_category', {slug: group.category.slug}) }}" class="neu-sm inline-flex h-11 shrink-0 items-center rounded-full px-5 text-sm font-semibold text-wine">Voir toutes les collections</a>
+        </div>
+        <div class="-mx-5 flex gap-6 overflow-x-auto px-5 py-4 [&>*]:w-[240px] [&>*]:shrink-0">
+            {% for collection in group.collections %}
+                {% include 'collections/_card.html.twig' %}
+            {% endfor %}
+        </div>
+    </section>
+{% endfor %}
+
+{% if uncategorised %}
+    <section aria-label="Sans catégorie" class="flex flex-col gap-4">
+        <h2 class="flex items-center gap-3 text-[24px]">
+            <span class="neu-sm flex size-11 items-center justify-center rounded-full text-wine"><twig:ux:icon name="heroicons:tag" class="size-5" /></span>
+            Sans catégorie
+            <span class="font-sans text-sm font-medium text-muted-ink">{{ uncategorised|length }}</span>
+        </h2>
+        <div class="-mx-5 flex gap-6 overflow-x-auto px-5 py-4 [&>*]:w-[240px] [&>*]:shrink-0">
+            {% for collection in uncategorised %}
+                {% include 'collections/_card.html.twig' %}
+            {% endfor %}
+        </div>
+    </section>
+{% endif %}
+
+{% if not groups and not uncategorised %}
+    <p class="text-muted-ink">Vous n'avez pas encore de collections. Créez-en une dès maintenant !</p>
+{% endif %}
 {% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'layout/app.html.twig' %}
+
+{% import '_macros/category.html.twig' as cat %}
+
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block content %}
+<header class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+        <span class="neu-sm flex size-14 items-center justify-center rounded-full text-wine"><twig:ux:icon name="{{ cat.icon(category.name) }}" class="size-7" /></span>
+        <div>
+            <h1 class="text-[40px] leading-[1.1]">{{ category.name }}</h1>
+            <p class="text-[17px] text-muted-ink">{{ collections|length }} collection{{ collections|length > 1 ? 's' : '' }}</p>
+        </div>
+    </div>
+    <a href="{{ path('app_collections') }}" class="neu-sm inline-flex h-11 items-center rounded-full px-5 text-sm font-semibold text-wine">← Toutes les collections</a>
+</header>
+
+<section aria-label="{{ category.name }}" class="grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr))]">
+    {% for collection in collections %}
+        {% include 'collections/_card.html.twig' %}
+    {% else %}
+        <p class="col-span-full text-muted-ink">Aucune collection dans cette catégorie.</p>
+    {% endfor %}
+</section>
+{% endblock %}

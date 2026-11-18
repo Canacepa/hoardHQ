@@ -6,6 +6,7 @@ use App\Repository\CategoriesRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 #[ORM\Entity(repositoryClass: CategoriesRepository::class)]
 class Categories
@@ -18,10 +19,13 @@ class Categories
     #[ORM\Column(length: 255)]
     private ?string $name = null;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $active = false;
+
     /**
-     * @var Collection<int, collections>
+     * @var Collection<int, Collections>
      */
-    #[ORM\ManyToMany(targetEntity: collections::class, inversedBy: 'categories')]
+    #[ORM\OneToMany(targetEntity: Collections::class, mappedBy: 'category')]
     private Collection $collections;
 
     /**
@@ -46,6 +50,12 @@ class Categories
         return $this->name;
     }
 
+    /** URL slug derived from the name, e.g. "Comics & Manga" => "comics-manga". */
+    public function getSlug(): string
+    {
+        return strtolower((new AsciiSlugger())->slug((string) $this->name));
+    }
+
     public function setName(string $name): static
     {
         $this->name = $name;
@@ -53,26 +63,41 @@ class Categories
         return $this;
     }
 
+    public function isActive(): bool
+    {
+        return $this->active;
+    }
+
+    public function setActive(bool $active): static
+    {
+        $this->active = $active;
+
+        return $this;
+    }
+
     /**
-     * @return Collection<int, collections>
+     * @return Collection<int, Collections>
      */
     public function getCollections(): Collection
     {
         return $this->collections;
     }
 
-    public function addCollection(collections $collection): static
+    public function addCollection(Collections $collection): static
     {
         if (!$this->collections->contains($collection)) {
             $this->collections->add($collection);
+            $collection->setCategory($this);
         }
 
         return $this;
     }
 
-    public function removeCollection(collections $collection): static
+    public function removeCollection(Collections $collection): static
     {
-        $this->collections->removeElement($collection);
+        if ($this->collections->removeElement($collection) && $collection->getCategory() === $this) {
+            $collection->setCategory(null);
+        }
 
         return $this;
     }

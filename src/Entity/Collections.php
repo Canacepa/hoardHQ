@@ -11,6 +11,7 @@ use Symfony\UX\Turbo\Attribute\Broadcast;
 
 #[ORM\Entity(repositoryClass: CollectionsRepository::class)]
 #[Broadcast]
+#[ORM\HasLifecycleCallbacks]
 class Collections
 {
     #[ORM\Id]
@@ -26,34 +27,34 @@ class Collections
 
     #[ORM\ManyToOne(inversedBy: 'collectionsOwned')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?user $owner = null;
+    private ?User $owner = null;
+
+    #[ORM\ManyToOne(inversedBy: 'collections')]
+    private ?Categories $category = null;
 
     /**
-     * @var Collection<int, Categories>
+     * @var Collection<int, User>
      */
-    #[ORM\ManyToMany(targetEntity: Categories::class, mappedBy: 'collections')]
-    private Collection $categories;
-
-    /**
-     * @var Collection<int, user>
-     */
-    #[ORM\ManyToMany(targetEntity: user::class, inversedBy: 'collectionsContributor')]
+    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'collectionsContributor')]
     #[ORM\JoinTable(name: 'collections_contributors')]
     private Collection $contributors;
 
     /**
-     * @var Collection<int, user>
+     * @var Collection<int, User>
      */
-    #[ORM\ManyToMany(targetEntity: user::class, inversedBy: 'collectionsViewer')]
+    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'collectionsViewer')]
     #[ORM\JoinTable(name: 'collections_viewers')]
     private Collection $viewers;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $thumbnail = null;
 
+    #[ORM\Column]
+    private \DateTimeImmutable $updatedAt;
+
     public function __construct()
     {
-        $this->categories = new ArrayCollection();
+        $this->updatedAt = new \DateTimeImmutable();
         $this->contributors = new ArrayCollection();
         $this->viewers = new ArrayCollection();
     }
@@ -87,54 +88,39 @@ class Collections
         return $this;
     }
 
-    public function getOwner(): ?user
+    public function getOwner(): ?User
     {
         return $this->owner;
     }
 
-    public function setOwner(?user $owner): static
+    public function setOwner(?User $owner): static
     {
         $this->owner = $owner;
 
         return $this;
     }
 
-    /**
-     * @return Collection<int, Categories>
-     */
-    public function getCategories(): Collection
+    public function getCategory(): ?Categories
     {
-        return $this->categories;
+        return $this->category;
     }
 
-    public function addCategory(Categories $category): static
+    public function setCategory(?Categories $category): static
     {
-        if (!$this->categories->contains($category)) {
-            $this->categories->add($category);
-            $category->addCollection($this);
-        }
-
-        return $this;
-    }
-
-    public function removeCategory(Categories $category): static
-    {
-        if ($this->categories->removeElement($category)) {
-            $category->removeCollection($this);
-        }
+        $this->category = $category;
 
         return $this;
     }
 
     /**
-     * @return Collection<int, user>
+     * @return Collection<int, User>
      */
     public function getContributors(): Collection
     {
         return $this->contributors;
     }
 
-    public function addContributor(user $contributor): static
+    public function addContributor(User $contributor): static
     {
         if (!$this->contributors->contains($contributor)) {
             $this->contributors->add($contributor);
@@ -143,7 +129,7 @@ class Collections
         return $this;
     }
 
-    public function removeContributor(user $contributor): static
+    public function removeContributor(User $contributor): static
     {
         $this->contributors->removeElement($contributor);
 
@@ -151,14 +137,14 @@ class Collections
     }
 
     /**
-     * @return Collection<int, user>
+     * @return Collection<int, User>
      */
     public function getViewers(): Collection
     {
         return $this->viewers;
     }
 
-    public function addViewer(user $viewer): static
+    public function addViewer(User $viewer): static
     {
         if (!$this->viewers->contains($viewer)) {
             $this->viewers->add($viewer);
@@ -167,7 +153,7 @@ class Collections
         return $this;
     }
 
-    public function removeViewer(user $viewer): static
+    public function removeViewer(User $viewer): static
     {
         $this->viewers->removeElement($viewer);
 
@@ -184,5 +170,16 @@ class Collections
         $this->thumbnail = $thumbnail;
 
         return $this;
+    }
+
+    public function getUpdatedAt(): \DateTimeImmutable
+    {
+        return $this->updatedAt;
+    }
+
+    #[ORM\PreUpdate]
+    public function touch(): void
+    {
+        $this->updatedAt = new \DateTimeImmutable();
     }
 }

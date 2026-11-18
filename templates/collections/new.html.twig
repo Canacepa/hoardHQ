@@ -1,28 +1,12 @@
-{% extends 'base.html.twig' %}
+{% extends 'layout/app.html.twig' %}
 
-{% block title %}Hello CollectionsController!{% endblock %}
+{% block title %}Nouvelle collection{% endblock %}
 
-{% block body %}
-<style>
-</style>
-
-<div class="container">
-    <h1>Créer une nouvelle collection !</h1>
-
-    {# <form method="post" action="/collections/new">
-        <div class="mb-3">
-            <label for="name" class="form-label">Nom de la collection</label>
-            <input type="text" class="form-control" id="name" name="name" required>
-        </div>
-        <div class="mb-3">
-            <label for="description" class="form-label">Description de la collection</label>
-            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Créer la collection</button>
-        <twig:Button variant="default" >Créer la collection</twig:Button>
-    </form> #}
+{% block content %}
+<h1 class="text-[40px]">Créer une nouvelle collection</h1>
+<section class="neu max-w-xl rounded-[32px] p-7 [&_input]:inset [&_textarea]:inset [&_input]:w-full [&_textarea]:w-full [&_input]:rounded-2xl [&_textarea]:rounded-2xl [&_input]:px-4 [&_textarea]:px-4 [&_input]:py-3 [&_textarea]:py-3 [&_input]:outline-none [&_label]:mb-1 [&_label]:block [&_label]:text-sm [&_label]:font-semibold [&_select]:inset [&_select]:w-full [&_select]:rounded-2xl [&_select]:px-4 [&_select]:py-3 [&_select]:outline-none [&_button]:wine [&_button]:h-[52px] [&_button]:rounded-[18px] [&_button]:px-6 [&_button]:font-semibold [&_div]:mb-4">
     {{ form_start(form) }}
     {{ form_widget(form) }}
     {{ form_end(form) }}
-</div>
+</section>
 {% endblock %}
