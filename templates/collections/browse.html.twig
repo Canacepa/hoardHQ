@@ -8,6 +8,17 @@
     <p class="text-[17px] text-muted-ink">Public collections from other collectors.</p>
 </header>
 
+<form method="get" action="{{ path('app_browse') }}" role="search" class="flex flex-wrap items-center gap-3">
+    <label class="inset flex h-12 min-w-[240px] max-w-xl flex-1 items-center gap-2.5 rounded-full px-5 text-muted-ink focus-within:ring-2 focus-within:ring-wine/40">
+        <twig:ux:icon name="heroicons:magnifying-glass" class="size-5 shrink-0" />
+        <span class="sr-only">Search public collections</span>
+        <input type="search" name="q" value="{{ q }}" placeholder="Search by name, description or collector" class="min-w-0 flex-1 bg-transparent text-base text-ink outline-none placeholder:text-muted-ink/80">
+    </label>
+    {% if q %}
+        <twig:Button as="a" variant="link" href="{{ path('app_browse') }}" class="h-auto px-0 font-semibold text-wine">Clear</twig:Button>
+    {% endif %}
+</form>
+
 {% if popular|length %}
 <section aria-label="Popular collections" class="flex flex-col gap-5" data-controller="carousel">
     <div class="flex items-center justify-between gap-4">
@@ -39,11 +50,15 @@
 </section>
 {% endif %}
 
+{% if q %}
+    <p class="text-muted-ink">{{ collections|length }} result{{ collections|length != 1 ? 's' : '' }} for “{{ q }}”</p>
+{% endif %}
+
 <section aria-label="Public collections" class="grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr))]">
     {% for collection in collections %}
         {% include 'collections/_card.html.twig' %}
     {% else %}
-        <p class="col-span-full text-muted-ink">No public collections yet.</p>
+        <p class="col-span-full text-muted-ink">{{ q ? 'Nothing matches your search.' : 'No public collections yet.' }}</p>
     {% endfor %}
 </section>
 {% endblock %}

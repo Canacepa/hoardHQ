@@ -2,11 +2,17 @@
 
 {% import '_macros/category.html.twig' as cat %}
 
-{% block title %} - {{ isSelf ? 'Hello ' ~ user.username : user.username }}{% endblock %}
+{% block title %} - {{ user.username }}{% endblock %}
 
 {% block content %}
 <header class="flex flex-wrap items-center justify-between gap-4">
-    <h1 class="text-[46px] leading-[1.1]">{{ isSelf ? 'Hello ' ~ user.username : user.username }}</h1>
+    <div class="flex flex-col gap-1.5">
+        <span class="text-xs font-semibold uppercase tracking-[.14em] text-muted-ink">{{ isSelf ? 'Your profile' : 'Profile' }}</span>
+        <h1 class="text-[46px] leading-[1.1]">{{ user.username }}</h1>
+    </div>
+    {% if isSelf %}
+        <twig:Button as="a" variant="neu" size="pill" href="{{ logout_path() }}" data-turbo-prefetch="false"><twig:ux:icon name="heroicons:arrow-right-on-rectangle" class="size-5" />Log out</twig:Button>
+    {% endif %}
     {% if not isSelf %}
         <form method="post" action="{{ path(isFollowing ? 'user_unfollow' : 'user_follow', {slug: user.username}) }}">
             <input type="hidden" name="_token" value="{{ csrf_token('follow-user-' ~ user.id) }}">
@@ -17,7 +23,9 @@
 
 {# `owned` is every collection on your own profile, only the public ones on someone else's. #}
 {% set shared = isSelf ? user.collectionsContributor|merge(user.collectionsViewer) : [] %}
-<section aria-label="Statistics" class="grid grid-cols-2 gap-6 md:grid-cols-3 xl:grid-cols-5">
+{# 5 tiles. Widths follow the container: 2 columns (first tile full width), then 3 per row with the short row first and stretched, then all 5 on one line. #}
+<div class="@container">
+<section aria-label="Statistics" class="grid grid-cols-2 gap-4 @xl:gap-6 [&>*]:min-w-0 [&>:first-child]:col-span-2 @xl:grid-cols-6 @xl:[&>*]:col-span-2 @xl:[&>:nth-child(-n+2)]:col-span-3 @6xl:grid-cols-5 @6xl:[&>*]:col-span-1 @6xl:[&>:nth-child(-n+2)]:col-span-1">
     {# Collection stats open a list page, user stats open a modal. Counts only include what the viewer may see. #}
     {% set contributed = user.collectionsContributor|filter(c => isSelf or c.public) %}
     {% set followedCollections = user.collectionsFollowed|filter(c => isSelf or c.public) %}
@@ -58,6 +66,7 @@
         {% endif %}
     {% endfor %}
 </section>
+</div>
 
 {% if owned|length %}
 {% set featured = owned|first %}

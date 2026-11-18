@@ -1,0 +1,95 @@
+{% extends 'layout/app.html.twig' %}
+
+{% import '_macros/category.html.twig' as cat %}
+
+{% block title %} - Overview{% endblock %}
+
+{% block content %}
+<header class="flex flex-col gap-1.5">
+    <h1 class="text-[46px] leading-[1.1]">Your hoard</h1>
+    <p class="text-[17px] text-muted-ink">Hello {{ user.username }}, everything you keep, catalogued and within reach.</p>
+</header>
+
+<section aria-label="Featured collection" class="relative flex flex-wrap items-center gap-8 overflow-hidden rounded-[36px] p-9 text-[#fbf3e6]" style="background:linear-gradient(135deg,#8a3a44 0%,#722f37 45%,#4a1d24 100%);box-shadow:12px 12px 28px rgb(114 47 55/.32),-8px -8px 22px rgb(255 252 243/.5)">
+    <div aria-hidden="true" class="absolute -top-28 -right-14 size-[360px] rounded-full bg-[radial-gradient(circle,rgb(183_168_154/.65),transparent_70%)]"></div>
+    <div aria-hidden="true" class="absolute -bottom-40 left-[30%] size-[320px] rounded-full bg-[radial-gradient(circle,rgb(232_220_198/.28),transparent_70%)]"></div>
+    {% if featured %}
+        <div class="relative flex min-w-[260px] flex-[1_1_320px] flex-col gap-4">
+            <span class="text-xs font-semibold uppercase tracking-[.14em] text-[#fbf3e6]/85">Featured collection</span>
+            <h2 class="text-[40px] leading-[1.1]">{{ featured.name }}</h2>
+            {% if featured.description %}<p class="line-clamp-2 max-w-md text-base text-[#fbf3e6]/90">{{ featured.description }}</p>{% endif %}
+            <p class="text-sm font-medium text-[#fbf3e6]/90">{{ featured.items|length }} item{{ featured.items|length != 1 ? 's' : '' }}{% if featured.visibleCategory %} · {{ featured.visibleCategory.name }}{% endif %}</p>
+            <div class="mt-1 flex flex-wrap gap-3">
+                <twig:Button as="a" variant="cream" size="md" href="{{ path('app_collections_show', {id: featured.id}) }}">Open collection</twig:Button>
+                <twig:Button as="a" variant="glass" size="md" href="{{ path('app_items_new', {id: featured.id}) }}">Add item</twig:Button>
+            </div>
+        </div>
+        <div class="relative flex min-w-[240px] flex-[1_1_300px] flex-col gap-3.5">
+            {% for item in featured.items|slice(0, 3) %}
+                <div class="glass-dark flex items-center gap-3.5 rounded-[24px] p-3.5 {{ loop.index is even ? 'sm:ml-7' : '' }}">
+                    <span class="flex size-[52px] flex-none items-center justify-center rounded-2xl bg-[#1e060a]/30 font-serif text-2xl font-semibold" aria-hidden="true">{{ item.name|first|upper }}</span>
+                    <span class="min-w-0 truncate font-semibold">{{ item.name }}</span>
+                </div>
+            {% else %}
+                <div class="glass-dark rounded-[24px] p-5 text-[#fbf3e6]/90">No items in this collection yet. Add the first one!</div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="relative flex min-w-[260px] flex-1 flex-col gap-4">
+            <span class="text-xs font-semibold uppercase tracking-[.14em] text-[#fbf3e6]/85">Get started</span>
+            <h2 class="text-[40px] leading-[1.1]">Start your hoard</h2>
+            <p class="max-w-md text-base text-[#fbf3e6]/90">Create your first collection and start cataloguing what you keep.</p>
+            <div class="mt-1"><twig:Button as="a" variant="cream" size="md" href="{{ path('app_collections_new') }}">New collection</twig:Button></div>
+        </div>
+    {% endif %}
+</section>
+
+<section aria-label="Collections" class="flex flex-col gap-5">
+    <div class="flex items-center justify-between gap-4">
+        <h2 class="text-[28px]">Collections</h2>
+        <twig:Button as="a" variant="neu" size="pill" href="{{ path('app_collections') }}">See all</twig:Button>
+    </div>
+    <div class="grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr))]">
+        {% for collection in recentCollections %}
+            {% include 'collections/_card.html.twig' with {showCategory: true} %}
+        {% endfor %}
+        <a href="{{ path('app_collections_new') }}" class="inset flex min-h-[260px] flex-col items-center justify-center gap-3.5 rounded-[28px] p-5 text-[15px] font-semibold text-muted-ink outline-none focus-visible:ring-2 focus-visible:ring-wine/40">
+            <span class="neu-sm flex size-14 items-center justify-center rounded-full text-wine"><twig:ux:icon name="heroicons:plus" class="size-6" /></span>
+            New collection
+        </a>
+    </div>
+</section>
+
+<div class="flex flex-wrap gap-7">
+    <section aria-label="Recently added" class="neu flex min-w-0 flex-[2_1_420px] flex-col gap-5 rounded-[32px] p-7">
+        <h2 class="text-2xl">Recently added</h2>
+        <ul class="flex flex-col gap-3.5">
+            {% for item in recentItems %}
+                <li class="flex items-center gap-4">
+                    <span class="inset flex size-14 flex-none items-center justify-center rounded-2xl font-serif text-2xl text-wine" aria-hidden="true">{{ item.name|first|upper }}</span>
+                    <span class="min-w-0">
+                        <span class="block truncate font-semibold">{{ item.name }}</span>
+                        <a href="{{ path('app_collections_show', {id: item.collection.id}) }}" class="block truncate text-sm text-muted-ink underline-offset-2 hover:underline">in {{ item.collection.name }}</a>
+                    </span>
+                </li>
+            {% else %}
+                <li class="text-muted-ink">Items you add to your collections show up here.</li>
+            {% endfor %}
+        </ul>
+    </section>
+
+    <section aria-label="From people you follow" class="glass flex min-w-0 flex-[1_1_300px] flex-col gap-5 rounded-[32px] p-7">
+        <h2 class="text-2xl">From people you follow</h2>
+        <ul class="flex flex-col gap-3.5">
+            {% for collection in fromFollowing %}
+                <li><a href="{{ path('app_collections_show', {id: collection.id}) }}" class="flex items-center gap-3.5 rounded-2xl p-1 hover:bg-white/35">
+                    <span class="neu-sm flex size-10 flex-none items-center justify-center rounded-full text-wine"><twig:ux:icon name="{{ collection.visibleCategory ? cat.icon(collection.visibleCategory.name) : 'heroicons:tag' }}" class="size-[18px]" /></span>
+                    <span class="min-w-0"><span class="block truncate font-semibold">{{ collection.name }}</span><span class="block truncate text-sm text-muted-ink">By {{ collection.owner.username }}</span></span>
+                </a></li>
+            {% else %}
+                <li class="text-muted-ink">Follow other collectors to see their public collections here. <a href="{{ path('app_browse') }}" class="font-semibold text-wine underline underline-offset-2">Browse</a></li>
+            {% endfor %}
+        </ul>
+    </section>
+</div>
+{% endblock %}

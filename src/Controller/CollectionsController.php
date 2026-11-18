@@ -41,16 +41,26 @@ final class CollectionsController extends AbstractController
 
     #[Route('/browse', name: 'app_browse')]
     #[IsGranted('ROLE_USER')]
-    public function browse(CollectionsRepository $repository): Response
+    public function browse(Request $request, CollectionsRepository $repository): Response
     {
-        $collections = $repository->createQueryBuilder('c')
+        $q = trim($request->query->getString('q'));
+        $search = $repository->createQueryBuilder('c')
+            ->join('c.owner', 'o')
             ->andWhere('c.public = true')
             ->andWhere('c.owner != :me')
             ->setParameter('me', $this->getUser())
             ->orderBy('c.updatedAt', 'DESC')
-            ->addOrderBy('c.id', 'DESC')
-            ->getQuery()
-            ->getResult();
+            ->addOrderBy('c.id', 'DESC');
+        if ($q !== '') {
+            // Match the name, description or owner; escape LIKE wildcards typed by the user.
+            $search->andWhere("(c.name LIKE :q ESCAPE '!' OR c.description LIKE :q ESCAPE '!' OR o.username LIKE :q ESCAPE '!')")
+                ->setParameter('q', '%' . addcslashes($q, '!%_') . '%');
+        }
+        $collections = $search->getQuery()->getResult();
+        if ($q !== '') {
+            // While searching, only the results are shown.
+            return $this->render('collections/browse.html.twig', ['collections' => $collections, 'popular' => [], 'q' => $q]);
+        }
 
         // Most followed first, then most recently updated.
         $popular = $repository->createQueryBuilder('c')
@@ -65,7 +75,7 @@ final class CollectionsController extends AbstractController
             ->getQuery()
             ->getResult();
 
-        return $this->render('collections/browse.html.twig', ['collections' => $collections, 'popular' => $popular]);
+        return $this->render('collections/browse.html.twig', ['collections' => $collections, 'popular' => $popular, 'q' => '']);
     }
 
     #[Route('/collections/category/{slug}', name: 'app_collections_category')]

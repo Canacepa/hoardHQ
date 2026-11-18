@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Items;
+use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,6 +15,23 @@ class ItemsRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Items::class);
+    }
+
+    /**
+     * Newest items first, across all collections owned by $owner.
+     *
+     * @return Items[]
+     */
+    public function latestOwnedBy(User $owner, int $limit): array
+    {
+        return $this->createQueryBuilder('i')
+            ->join('i.collection', 'c')
+            ->andWhere('c.owner = :owner')
+            ->setParameter('owner', $owner)
+            ->orderBy('i.id', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
     }
 
     //    /**

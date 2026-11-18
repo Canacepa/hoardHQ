@@ -2,12 +2,13 @@
 {%- props mobile = false -%}
 {% if app.user %}
 {% set route = app.current_route %}
-{# "Overview" is only active on your own profile. #}
+{# "Profile" is only active on your own profile. #}
 {% set ownProfile = app.request.attributes.get('slug') == app.user.userIdentifier %}
 {% set items = [
-    {route: 'user_profile', url: path('user_profile', {slug: app.user.userIdentifier}), icon: 'home', label: 'Overview'},
+    {route: 'app_overview', url: path('app_overview'), icon: 'home', label: 'Overview'},
     {route: 'app_collections', url: path('app_collections'), icon: 'squares-2x2', label: 'Collections'},
     {route: 'app_browse', url: path('app_browse'), icon: 'globe-alt', label: 'Browse'},
+    {route: 'user_profile', url: path('user_profile', {slug: app.user.userIdentifier}), icon: 'user-circle', label: 'Profile'},
 ] %}
 
 {% if not mobile %}
@@ -27,9 +28,10 @@
         <a href="{{ item.url }}" aria-label="{{ item.label }}" {% if current %}aria-current="page"{% endif %} class="{{ pill }} {{ current ? 'inset text-wine' : 'text-muted-ink' }}"><twig:ux:icon name="heroicons:{{ item.icon }}" class="size-6" /></a>
     {% endfor %}
     <twig:Button as="a" variant="wine" href="{{ path('app_collections_new') }}" aria-label="New collection" class="size-[58px] rounded-full p-0"><twig:ux:icon name="heroicons:plus" class="size-6" /></twig:Button>
-    {% set item = items[2] %}
-    <a href="{{ item.url }}" aria-label="{{ item.label }}" {% if route == item.route %}aria-current="page"{% endif %} class="{{ pill }} {{ route == item.route ? 'inset text-wine' : 'text-muted-ink' }}"><twig:ux:icon name="heroicons:{{ item.icon }}" class="size-6" /></a>
-    <a href="{{ logout_path() }}" data-turbo-prefetch="false" aria-label="Log out" class="{{ pill }} text-muted-ink"><twig:ux:icon name="heroicons:arrow-right-on-rectangle" class="size-6" /></a>
+    {% for item in items|slice(2, 2) %}
+        {% set current = route == item.route and (item.route != 'user_profile' or ownProfile) %}
+        <a href="{{ item.url }}" aria-label="{{ item.label }}" {% if current %}aria-current="page"{% endif %} class="{{ pill }} {{ current ? 'inset text-wine' : 'text-muted-ink' }}"><twig:ux:icon name="heroicons:{{ item.icon }}" class="size-6" /></a>
+    {% endfor %}
 </nav>
 {% endif %}
 {% endif %}
