@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "skills": {
+    "brainstorming": {
+      "source": "sickn33/agentic-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/brainstorming/SKILL.md",
+      "computedHash": "d3ff46d4a04a35a01a774d4dd05663bd79ba11ba8728cafe3943aeca474f1163",
+      "commit": "15888d3e32930f28b63d83f9e77f976604ccae99"
+    }
+  }
+}
