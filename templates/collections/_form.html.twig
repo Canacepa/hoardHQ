@@ -1,6 +1,28 @@
-<section class="neu max-w-xl rounded-[32px] p-7 [&_label]:mb-1 [&_label]:block [&_label]:text-sm [&_label]:font-semibold [&_div]:mb-4 [&_:is(input:not([type=checkbox]),textarea,select)]:inset [&_:is(input:not([type=checkbox]),textarea,select)]:w-full [&_:is(input:not([type=checkbox]),textarea,select)]:px-5 [&_:is(input:not([type=checkbox]),textarea,select)]:outline-none [&_:is(input:not([type=checkbox]),textarea,select)]:focus-visible:ring-2 [&_:is(input:not([type=checkbox]),textarea,select)]:focus-visible:ring-wine/40 [&_:is(input:not([type=checkbox]),select)]:h-[54px] [&_:is(input:not([type=checkbox]),select)]:rounded-full [&_textarea]:min-h-28 [&_textarea]:resize-none [&_textarea]:rounded-[24px] [&_textarea]:py-3">
+<section{% if deletable is defined and deletable %} data-controller="dialog"{% endif %} class="neu max-w-xl rounded-[32px] p-7 [&_label]:mb-1 [&_label]:block [&_label]:text-sm [&_label]:font-semibold [&_div]:mb-4 [&_:is(input:not([type=checkbox]),textarea,select)]:inset [&_:is(input:not([type=checkbox]),textarea,select)]:w-full [&_:is(input:not([type=checkbox]),textarea,select)]:px-5 [&_:is(input:not([type=checkbox]),textarea,select)]:outline-none [&_:is(input:not([type=checkbox]),textarea,select)]:focus-visible:ring-2 [&_:is(input:not([type=checkbox]),textarea,select)]:focus-visible:ring-wine/40 [&_:is(input:not([type=checkbox]),select)]:h-[54px] [&_:is(input:not([type=checkbox]),select)]:rounded-full [&_textarea]:min-h-28 [&_textarea]:resize-none [&_textarea]:rounded-[24px] [&_textarea]:py-3">
+    {% set deletable = deletable ?? null %}
     {{ form_start(form) }}
     {{ form_widget(form) }}
-    <twig:Button type="submit" variant="wine" size="md" class="mt-2">{{ submit_label }}</twig:Button>
+    {# mb-0! because the section above adds a bottom margin to every div. The row is right-aligned on both pages: the submit
+       button at the far right, with Delete collection before it for the owner on the edit page. #}
+    <div class="mb-0! mt-2 flex flex-wrap items-center justify-end gap-3">
+        {% if deletable %}
+            <twig:Button type="button" variant="neu" size="md" data-action="dialog#open" aria-haspopup="dialog"><twig:ux:icon name="heroicons:trash" class="size-5" />Delete collection</twig:Button>
+        {% endif %}
+        <twig:Button type="submit" variant="wine" size="md">{{ submit_label }}</twig:Button>
+    </div>
     {{ form_end(form) }}
+
+    {# Outside the edit form on purpose: it has a form of its own, and forms cannot nest. #}
+    {% if deletable %}
+        {% set count = deletable.entries|length %}
+        <dialog data-dialog-target="dialog" data-action="click->dialog#backdrop" aria-label="Delete {{ deletable.name }}" class="neu m-auto w-[min(92vw,480px)] rounded-[32px] p-8 text-ink backdrop:bg-ink/30 backdrop:backdrop-blur-sm">
+            <h2 class="text-2xl leading-tight">Delete “{{ deletable.name }}”?</h2>
+            <p class="mt-3">{% if count %}Its {{ count }} item{{ count != 1 ? 's' : '' }} will be removed from it too. {% endif %}This can't be undone.</p>
+            <form method="post" action="{{ path('app_collections_delete', {id: deletable.id}) }}" class="mt-6 flex flex-wrap justify-end gap-3">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ deletable.id) }}">
+                <twig:Button type="button" variant="neu" size="md" data-action="dialog#close">Cancel</twig:Button>
+                <twig:Button type="submit" variant="wine" size="md"><twig:ux:icon name="heroicons:trash" class="size-5" />Delete</twig:Button>
+            </form>
+        </dialog>
+    {% endif %}
 </section>

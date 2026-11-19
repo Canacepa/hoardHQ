@@ -239,7 +239,11 @@ final class CollectionsController extends AbstractController
             return $this->redirectToRoute('app_collections_show', ['id' => $collection->getId()]);
         }
 
-        return $this->render('collections/edit.html.twig', ['collection' => $collection, 'form' => $form->createView()]);
+        return $this->render('collections/edit.html.twig', [
+            'collection' => $collection,
+            'form' => $form->createView(),
+            'isOwner' => $collection->getOwner() === $this->getUser(),
+        ]);
     }
 
     /**
@@ -267,6 +271,22 @@ final class CollectionsController extends AbstractController
         $referer = $request->headers->get('referer');
 
         return $this->redirect($referer !== null && str_starts_with($referer, $request->getSchemeAndHttpHost() . '/') ? $referer : $this->generateUrl('app_collections'));
+    }
+
+    /** Deletes the collection with its entries (the shared catalog items stay). Owner only: contributors can edit but not delete. */
+    #[Route('/collections/{id}/delete', name: 'app_collections_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function deleteCollection(Collections $collection, Request $request, EntityManagerInterface $em): Response
+    {
+        if ($collection->getOwner() !== $this->getUser()
+            || !$this->isCsrfTokenValid('delete' . $collection->getId(), $request->getPayload()->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $em->remove($collection);
+        $em->flush();
+
+        return $this->redirectToRoute('app_collections');
     }
 
     /**
