@@ -82,6 +82,30 @@ class Items
         return $this;
     }
 
+    /** Release (or first air) year from the provider, if it gave one. */
+    public function getYear(): ?int
+    {
+        $year = $this->attributes['year'] ?? null;
+
+        return is_numeric($year) ? (int) $year : null;
+    }
+
+    /** Image URL from the provider, if it gave one. */
+    public function getPoster(): ?string
+    {
+        return $this->attributes['poster'] ?? null;
+    }
+
+    /**
+     * Regular seasons of a TV show with their episode counts; empty for movies and for shows imported without season data.
+     *
+     * @return list<array{number: int, name: string, episodes: int}>
+     */
+    public function getSeasonList(): array
+    {
+        return $this->attributes['season_list'] ?? [];
+    }
+
     public function getAttributes(): ?array
     {
         return $this->attributes;

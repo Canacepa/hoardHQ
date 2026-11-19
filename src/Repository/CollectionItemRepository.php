@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\CollectionItem;
+use App\Entity\Collections;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -15,6 +16,24 @@ class CollectionItemRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, CollectionItem::class);
+    }
+
+    /**
+     * External ids the collection already has from $source.
+     *
+     * @return list<string>
+     */
+    public function externalIds(Collections $collection, string $source): array
+    {
+        return $this->createQueryBuilder('e')
+            ->select('i.externalId')
+            ->join('e.item', 'i')
+            ->andWhere('e.collection = :collection')
+            ->andWhere('i.source = :source')
+            ->setParameter('collection', $collection)
+            ->setParameter('source', $source)
+            ->getQuery()
+            ->getSingleColumnResult();
     }
 
     /**

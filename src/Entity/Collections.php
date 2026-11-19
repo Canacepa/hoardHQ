@@ -54,7 +54,7 @@ class Collections
     /**
      * @var Collection<int, CollectionItem>
      */
-    #[ORM\OneToMany(targetEntity: CollectionItem::class, mappedBy: 'collection', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: CollectionItem::class, mappedBy: 'collection', orphanRemoval: true, fetch: 'EXTRA_LAZY')]
     #[ORM\OrderBy(['id' => 'DESC'])]
     private Collection $entries;
 
@@ -126,6 +126,25 @@ class Collections
     public function getVisibleCategory(): ?Categories
     {
         return $this->category?->isActive() ? $this->category : null;
+    }
+
+    /**
+     * What this collection can hold, as the kind of item its API provides: "movie" or "tv" (TMDB). Null when the category has
+     * no item API behind it (yet), which means nothing can be added.
+     */
+    public function getImportType(): ?string
+    {
+        return match ($this->getVisibleCategory()?->getName()) {
+            'Movies' => 'movie',
+            'TV Shows' => 'tv',
+            default => null,
+        };
+    }
+
+    /** Whether items can be added at all. */
+    public function isImportable(): bool
+    {
+        return $this->getImportType() !== null;
     }
 
     public function setCategory(?Categories $category): static
