@@ -1,0 +1,72 @@
+{# Status block of the item modal. Params: entry, collection, canEdit.
+   Movies, and TV shows without season data: a Wanna watch / Watched toggle.
+   TV shows with season data: progress, then one row per season (mark it whole), expandable to tick single episodes. #}
+{% if collection.importable and (canEdit or entry.statusLabel) %}
+    {% set eid = entry.id %}
+    {% set label = 'text-xs font-semibold uppercase tracking-[.14em] text-muted-ink' %}
+    <section id="status-{{ eid }}" data-controller="status" data-badge="badge-{{ eid }}" class="flex flex-col gap-3">
+        <h3 class="{{ label }}">Status</h3>
+
+        {% if entry.episodeTracking %}
+            <div class="flex flex-col gap-2">
+                <p class="font-semibold">{{ entry.watchedTotal }} of {{ entry.episodeTotal }} episodes watched{{ entry.status == 'watched' ? ' · Watched' : '' }}</p>
+                <div class="inset h-2.5 overflow-hidden rounded-full" role="progressbar" aria-label="Episodes watched" aria-valuemin="0" aria-valuemax="{{ entry.episodeTotal }}" aria-valuenow="{{ entry.watchedTotal }}">
+                    <div class="h-full rounded-full bg-wine" style="width: {{ (entry.watchedTotal * 100 / entry.episodeTotal)|round }}%"></div>
+                </div>
+            </div>
+
+            {% if canEdit %}
+                {# One form for the whole show: every button below points at it with form="" and says what it toggles in name="target" (all, s2, s2e5). #}
+                <form id="watch-{{ eid }}" method="post" data-action="submit->status#save" action="{{ path('app_items_episodes', {id: collection.id, entry: eid}) }}"><input type="hidden" name="_token" value="{{ csrf_token('status' ~ collection.id) }}"></form>
+                <div class="flex flex-wrap gap-3">
+                    <twig:Button type="submit" form="watch-{{ eid }}" name="target" value="all" variant="neu" size="pill">{{ entry.status == 'watched' ? 'Clear all' : 'Mark all watched' }}</twig:Button>
+                    {% if not entry.watchedTotal %}
+                        {# Any ticked episode replaces "Wanna watch", so it is only offered before you start. #}
+                        <form method="post" data-action="submit->status#save" action="{{ path('app_items_status', {id: collection.id, entry: eid}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('status' ~ collection.id) }}">
+                            <input type="hidden" name="status" value="{{ entry.status == 'want' ? '' : 'want' }}">
+                            <twig:Button type="submit" variant="{{ entry.status == 'want' ? 'wine' : 'neu' }}" size="pill" aria-pressed="{{ entry.status == 'want' ? 'true' : 'false' }}"><twig:ux:icon name="heroicons:bookmark" class="size-4" />Wanna watch</twig:Button>
+                        </form>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <div class="flex flex-col gap-2">
+                {% for season in entry.item.seasonList %}
+                    {% set done = entry.watchedIn(season.number) %}
+                    {% set complete = done == season.episodes %}
+                    {% if canEdit %}
+                        {# The season button sits inside <summary> but is its own control, so it marks the season without expanding it. #}
+                        <details id="season-{{ eid }}-{{ season.number }}" class="inset rounded-2xl">
+                            <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 outline-none focus-visible:ring-2 focus-visible:ring-wine/40 rounded-2xl [&::-webkit-details-marker]:hidden">
+                                <span class="min-w-0"><span class="font-semibold">{{ season.name }}</span> <span class="ml-1 text-sm text-muted-ink">{{ done }} / {{ season.episodes }}</span></span>
+                                <twig:Button type="submit" form="watch-{{ eid }}" name="target" value="s{{ season.number }}" variant="{{ complete ? 'wine' : 'neu' }}" size="pill" class="h-9 flex-none px-4 text-xs">{{ complete ? 'Watched' : 'Mark watched' }}</twig:Button>
+                            </summary>
+                            <div class="flex flex-wrap gap-2 px-4 pb-4">
+                                {% for n in 1..season.episodes %}
+                                    {% set seen = entry.episodeWatched(season.number, n) %}
+                                    <button type="submit" form="watch-{{ eid }}" name="target" value="s{{ season.number }}e{{ n }}" aria-pressed="{{ seen ? 'true' : 'false' }}" aria-label="Episode {{ n }}" class="size-9 cursor-pointer rounded-xl text-sm font-semibold outline-none focus-visible:ring-2 focus-visible:ring-wine/40 {{ seen ? 'bg-wine text-[#fbf3e6]' : 'neu-sm text-ink' }}">{{ n }}</button>
+                                {% endfor %}
+                            </div>
+                        </details>
+                    {% else %}
+                        <p class="inset flex items-center justify-between gap-3 rounded-2xl px-4 py-3"><span class="font-semibold">{{ season.name }}</span><span class="text-sm text-muted-ink">{{ done }} / {{ season.episodes }}</span></p>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% elseif canEdit %}
+            <div class="flex flex-wrap gap-3">
+                {# Clicking the active status clears it. #}
+                {% for value, text in {want: 'Wanna watch', watched: 'Watched'} %}
+                    <form method="post" data-action="submit->status#save" action="{{ path('app_items_status', {id: collection.id, entry: eid}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('status' ~ collection.id) }}">
+                        <input type="hidden" name="status" value="{{ entry.status == value ? '' : value }}">
+                        <twig:Button type="submit" variant="{{ entry.status == value ? 'wine' : 'neu' }}" size="pill" aria-pressed="{{ entry.status == value ? 'true' : 'false' }}"><twig:ux:icon name="heroicons:{{ value == 'watched' ? 'check-circle' : 'bookmark' }}" class="size-4" />{{ text }}</twig:Button>
+                    </form>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="font-semibold">{{ entry.statusLabel }}</p>
+        {% endif %}
+    </section>
+{% endif %}

@@ -1,0 +1,87 @@
+{% extends 'layout/app.html.twig' %}
+
+{% block title %} - Import from TMDB{% endblock %}
+
+{% block back %}
+    <twig:Button as="a" variant="neu" size="md" href="{{ path('app_collections_show', {id: collection.id}) }}">← Back to {{ collection.name }}</twig:Button>
+{% endblock %}
+
+{% block content %}
+{% set noun = collection.importType == 'tv' ? 'TV shows' : 'movies' %}
+<h1 class="text-[40px]">Import into {{ collection.name }}</h1>
+
+<div class="flex flex-wrap items-center justify-between gap-4">
+<form method="get" action="{{ path('app_items_import', {id: collection.id}) }}" role="search" class="flex min-w-[260px] max-w-xl flex-1 items-center gap-3">
+    <label class="inset flex h-12 min-w-0 flex-1 items-center gap-2.5 rounded-full px-5 text-muted-ink focus-within:ring-2 focus-within:ring-wine/40">
+        <twig:ux:icon name="heroicons:magnifying-glass" class="size-5 shrink-0" />
+        <span class="sr-only">Search {{ noun }}</span>
+        <input type="search" name="q" value="{{ q }}" placeholder="Search {{ noun }}" autofocus class="min-w-0 flex-1 bg-transparent text-base text-ink outline-none placeholder:text-muted-ink/80">
+    </label>
+    <twig:Button type="submit" variant="wine" size="md">Search</twig:Button>
+</form>
+{% if results %}
+    {# Outside the results form so it can sit on the search row; "form" ties it back. #}
+    <twig:Button type="submit" form="import-form" variant="wine" size="md"><twig:ux:icon name="heroicons:plus" class="size-5" />Add selected</twig:Button>
+{% endif %}
+</div>
+
+{% if error %}<div role="alert" class="max-w-xl rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{{ error }}</div>{% endif %}
+
+<form id="import-form" method="post" action="{{ path('app_items_import', {id: collection.id}) }}" class="flex flex-col gap-6">
+<input type="hidden" name="_token" value="{{ csrf_token('import' ~ collection.id) }}">
+<ul class="grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr))]">
+    {% for result in results %}
+        {% if collection.importType == 'tv' %}
+            {# A show opens into a modal with its seasons and an "Add full show" button; nothing is loaded until it is opened. #}
+            {% set showId = result.externalId|replace({'tv:': ''}) %}
+            <li class="neu rounded-[28px]" data-controller="dialog lazyframe">
+                <button type="button" data-action="click->dialog#open click->lazyframe#load" aria-haspopup="dialog" class="flex w-full cursor-pointer gap-4 rounded-[28px] p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-wine/40">
+                    {% if result.attributes.poster %}
+                        <img src="{{ result.attributes.poster }}" alt="" loading="lazy" class="h-36 w-24 flex-none rounded-xl object-cover">
+                    {% else %}
+                        <span class="inset flex h-36 w-24 flex-none items-center justify-center rounded-xl font-serif text-3xl text-wine" aria-hidden="true">{{ result.name|first|upper }}</span>
+                    {% endif %}
+                    <span class="flex min-w-0 flex-1 flex-col gap-1">
+                        <span class="font-semibold">{{ result.name }}</span>
+                        <span class="text-sm text-muted-ink">TV show{% if result.attributes.year %} · {{ result.attributes.year }}{% endif %}</span>
+                        {% if result.attributes.overview %}<span class="line-clamp-3 text-sm text-muted-ink">{{ result.attributes.overview }}</span>{% endif %}
+                        <span class="mt-auto inline-flex items-center gap-1 pt-2 text-sm font-semibold text-wine">Seasons<twig:ux:icon name="heroicons:chevron-right" class="size-4" /></span>
+                    </span>
+                </button>
+                <dialog data-dialog-target="dialog" data-action="click->dialog#backdrop" aria-label="{{ result.name }}" class="neu m-auto h-[min(85vh,720px)] w-[min(92vw,640px)] rounded-[32px] p-0 text-ink open:flex open:flex-col backdrop:bg-ink/30 backdrop:backdrop-blur-sm">
+                    <header class="flex flex-none items-start justify-between gap-4 border-b border-ink/10 px-7 py-5">
+                        <div class="min-w-0">
+                            <h2 class="text-2xl leading-tight">{{ result.name }}</h2>
+                            <p class="text-sm text-muted-ink">TV show{% if result.attributes.year %} · {{ result.attributes.year }}{% endif %}</p>
+                        </div>
+                        <twig:Button type="button" variant="neu" size="pill" data-action="dialog#close" class="flex-none">Close</twig:Button>
+                    </header>
+                    <div class="min-h-0 flex-1 overflow-y-auto p-7">
+                        <turbo-frame id="seasons-{{ showId }}" src="{{ path('app_items_seasons', {id: collection.id, tv: showId}) }}" loading="lazy">
+                            <p class="text-sm text-muted-ink">Loading seasons…</p>
+                        </turbo-frame>
+                    </div>
+                </dialog>
+            </li>
+        {% else %}
+        <li class="neu rounded-[28px] has-[:checked]:ring-2 has-[:checked]:ring-wine/60"><label class="flex h-full cursor-pointer gap-4 p-4">
+            <twig:Checkbox name="externalId[]" value="{{ result.externalId }}" />
+            {% if result.attributes.poster %}
+                <img src="{{ result.attributes.poster }}" alt="" loading="lazy" class="h-36 w-24 flex-none rounded-xl object-cover">
+            {% else %}
+                <span class="inset flex h-36 w-24 flex-none items-center justify-center rounded-xl font-serif text-3xl text-wine" aria-hidden="true">{{ result.name|first|upper }}</span>
+            {% endif %}
+            <div class="flex min-w-0 flex-1 flex-col gap-1">
+                <span class="font-semibold">{{ result.name }}</span>
+                <span class="text-sm text-muted-ink">{{ result.attributes.type == 'tv' ? 'TV show' : 'Movie' }}{% if result.attributes.year %} · {{ result.attributes.year }}{% endif %}</span>
+                {% if result.attributes.overview %}<p class="line-clamp-3 text-sm text-muted-ink">{{ result.attributes.overview }}</p>{% endif %}
+            </div>
+        </label></li>
+        {% endif %}
+    {% else %}
+        {% if q and not error %}<li class="col-span-full text-muted-ink">Nothing new for "{{ q }}": no match, or everything found is already in this collection.</li>{% endif %}
+    {% endfor %}
+</ul>
+</form>
+
+{% endblock %}

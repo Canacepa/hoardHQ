@@ -21,13 +21,17 @@
             <p class="text-sm font-medium text-[#fbf3e6]/90">{{ featured.entries|length }} item{{ featured.entries|length != 1 ? 's' : '' }}{% if featured.visibleCategory %} · {{ featured.visibleCategory.name }}{% endif %}</p>
             <div class="mt-1 flex flex-wrap gap-3">
                 <twig:Button as="a" variant="cream" size="md" href="{{ path('app_collections_show', {id: featured.id}) }}">Open collection</twig:Button>
-                <twig:Button as="a" variant="glass" size="md" href="{{ path('app_items_new', {id: featured.id}) }}">Add item</twig:Button>
+                {% if featured.importable %}<twig:Button as="a" variant="glass" size="md" href="{{ path('app_items_import', {id: featured.id}) }}">Add item</twig:Button>{% endif %}
             </div>
         </div>
         <div class="relative flex min-w-[240px] flex-[1_1_300px] flex-col gap-3.5">
             {% for entry in featured.entries|slice(0, 3) %}
                 <div class="glass-dark flex items-center gap-3.5 rounded-[24px] p-3.5 {{ loop.index is even ? 'sm:ml-7' : '' }}">
-                    <span class="flex size-[52px] flex-none items-center justify-center rounded-2xl bg-[#1e060a]/30 font-serif text-2xl font-semibold" aria-hidden="true">{{ entry.item.name|first|upper }}</span>
+                    {% if entry.item.poster %}
+                        <img src="{{ entry.item.poster }}" alt="" loading="lazy" class="size-[52px] flex-none rounded-2xl object-cover">
+                    {% else %}
+                        <span class="flex size-[52px] flex-none items-center justify-center rounded-2xl bg-[#1e060a]/30 font-serif text-2xl font-semibold" aria-hidden="true">{{ entry.item.name|first|upper }}</span>
+                    {% endif %}
                     <span class="min-w-0 truncate font-semibold">{{ entry.item.name }}</span>
                 </div>
             {% else %}
@@ -66,7 +70,11 @@
         <ul class="flex flex-col gap-3.5">
             {% for entry in recentEntries %}
                 <li class="flex items-center gap-4">
-                    <span class="inset flex size-14 flex-none items-center justify-center rounded-2xl font-serif text-2xl text-wine" aria-hidden="true">{{ entry.item.name|first|upper }}</span>
+                    {% if entry.item.poster %}
+                        <img src="{{ entry.item.poster }}" alt="" loading="lazy" class="size-14 flex-none rounded-2xl object-cover">
+                    {% else %}
+                        <span class="inset flex size-14 flex-none items-center justify-center rounded-2xl font-serif text-2xl text-wine" aria-hidden="true">{{ entry.item.name|first|upper }}</span>
+                    {% endif %}
                     <span class="min-w-0">
                         <span class="block truncate font-semibold">{{ entry.item.name }}</span>
                         <a href="{{ path('app_collections_show', {id: entry.collection.id}) }}" class="block truncate text-sm text-muted-ink underline-offset-2 hover:underline">in {{ entry.collection.name }}</a>

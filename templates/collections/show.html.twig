@@ -4,27 +4,33 @@
 
 {% block title %} - {{ collection.name }}{% endblock %}
 
-{% block content %}
-<div class="flex flex-wrap items-center gap-3">
-    <twig:Button as="a" variant="link" href="{{ path(isOwner ? 'app_collections' : 'app_browse') }}" data-controller="back" data-action="back#go" class="h-auto px-0 font-semibold text-wine">← Back</twig:Button>
-    {% if isOwner %}
-        <twig:Button as="a" variant="link" href="{{ path('app_collections') }}" class="h-auto px-0 font-semibold text-wine">All my collections</twig:Button>
-    {% endif %}
-</div>
+{% block back %}
+    <div class="flex items-center gap-3">
+        <twig:Button as="a" variant="neu" size="md" href="{{ path(isOwner ? 'app_collections' : 'app_browse') }}" data-controller="back" data-action="back#go">← Back</twig:Button>
+        {% if isOwner %}
+            <twig:Button as="a" variant="neu" size="md" href="{{ path('app_collections') }}">All my collections</twig:Button>
+        {% endif %}
+    </div>
+{% endblock %}
 
+{% block content %}
 <section class="neu flex flex-wrap items-center gap-6 rounded-[32px] p-7">
     <span class="inset flex size-24 flex-none items-center justify-center rounded-[24px] text-wine" aria-hidden="true">
         {% if collection.visibleCategory %}<twig:ux:icon name="{{ cat.icon(collection.visibleCategory.name) }}" class="size-10" />{% else %}<span class="font-serif text-4xl font-semibold">{{ collection.name|first|upper }}</span>{% endif %}
     </span>
     <div class="min-w-[240px] flex-1">
-        <h1 class="text-[40px] leading-[1.1]">{{ collection.name }}</h1>
+        <div class="flex flex-wrap items-center gap-3">
+            <h1 class="text-[40px] leading-[1.1]">{{ collection.name }}</h1>
+            {% if canEdit %}
+                <twig:Button as="a" variant="neu" size="pill" href="{{ path('app_collections_edit', {id: collection.id}) }}" aria-label="Edit collection" title="Edit collection"><twig:ux:icon name="heroicons:pencil-square" class="size-5" /></twig:Button>
+            {% endif %}
+        </div>
         <p class="mt-1 text-muted-ink">By <a href="{{ path('user_profile', {slug: collection.owner.username}) }}" class="font-semibold text-wine underline underline-offset-2">{{ collection.owner.username }}</a>{% if collection.visibleCategory %} · {{ collection.visibleCategory.name }}{% endif %} · {{ collection.public ? 'Public' : 'Private' }}</p>
         {% if collection.description %}<p class="mt-3 max-w-2xl">{{ collection.description }}</p>{% endif %}
     </div>
-    <div class="flex flex-col items-end gap-2">
-        {% if canEdit %}
-            <twig:Button as="a" variant="neu" size="md" href="{{ path('app_collections_edit', {id: collection.id}) }}"><twig:ux:icon name="heroicons:pencil-square" class="size-5" />Edit</twig:Button>
-        {% endif %}
+    {# Right-hand column: the Follow button above the people around the collection. ml-auto keeps it on the right even when it wraps under
+       the title on a narrow screen. #}
+    <div class="ml-auto flex flex-col items-end gap-3">
         {% if not isOwner and (collection.public or isFollowing) %}
             <form method="post" action="{{ path(isFollowing ? 'app_collections_unfollow' : 'app_collections_follow', {id: collection.id}) }}">
                 <input type="hidden" name="_token" value="{{ csrf_token('follow' ~ collection.id) }}">
@@ -33,35 +39,138 @@
                 </twig:Button>
             </form>
         {% endif %}
-        <span class="text-sm text-muted-ink">{{ collection.followers|length }} follower{{ collection.followers|length != 1 ? 's' : '' }}</span>
+        {# Counts only, no names; stat tiles like a profile's, small and all the same width. Only a public collection can be followed, so
+           a private one has no Followers tile. #}
+        <div class="flex gap-2">
+            {% for stat in [
+                {label: 'Follower', icon: 'users', value: collection.followers|length, show: collection.public},
+                {label: 'Contributor', icon: 'pencil-square', value: collection.contributors|length, show: true},
+                {label: 'Viewer', icon: 'eye', value: collection.viewers|length, show: true},
+            ]|filter(stat => stat.show) %}
+                <div class="inset flex w-[7.75rem] flex-none flex-col gap-0.5 rounded-[20px] px-3 py-2.5">
+                    <span class="text-[10px] font-semibold uppercase tracking-[.08em] text-muted-ink">{{ stat.label }}{{ stat.value != 1 ? 's' : '' }}</span>
+                    <span class="flex items-center justify-between gap-2">
+                        <span class="font-serif text-3xl font-semibold leading-none text-wine">{{ stat.value }}</span>
+                        <twig:ux:icon name="heroicons:{{ stat.icon }}" class="size-4 text-muted-ink" />
+                    </span>
+                </div>
+            {% endfor %}
+        </div>
     </div>
 </section>
 
-<section aria-label="Items" class="flex flex-col gap-5">
+<section aria-label="Items" class="group/sel flex flex-col gap-5"{% if canEdit %} data-controller="selection" data-action="change->selection#count"{% endif %}>
     <div class="flex flex-wrap items-center justify-between gap-4">
         <h2 class="text-[28px]">Items <span class="text-lg text-muted-ink">({{ q ? entries|length ~ ' of ' : '' }}{{ collection.entries|length }})</span></h2>
         <form method="get" action="{{ path('app_collections_show', {id: collection.id}) }}" role="search" class="flex min-w-[200px] flex-1 items-center justify-end gap-3 sm:max-w-md">
+            <input type="hidden" name="sort" value="{{ sort }}">
             <label class="inset flex h-12 min-w-0 flex-1 items-center gap-2.5 rounded-full px-5 text-muted-ink focus-within:ring-2 focus-within:ring-wine/40">
                 <twig:ux:icon name="heroicons:magnifying-glass" class="size-5 shrink-0" />
                 <span class="sr-only">Search items</span>
                 <input type="search" name="q" value="{{ q }}" placeholder="Search items" class="min-w-0 flex-1 bg-transparent text-base text-ink outline-none placeholder:text-muted-ink/80">
             </label>
-            {% if q %}<twig:Button as="a" variant="link" href="{{ path('app_collections_show', {id: collection.id}) }}" class="h-auto px-0 font-semibold text-wine">Clear</twig:Button>{% endif %}
+            {% if q %}<twig:Button as="a" variant="link" href="{{ path('app_collections_show', {id: collection.id, sort: sort}) }}" class="h-auto px-0 font-semibold text-wine">Clear</twig:Button>{% endif %}
         </form>
-        {% if canEdit %}
-            <twig:Button as="a" variant="wine" size="md" href="{{ path('app_items_new', {id: collection.id}) }}"><twig:ux:icon name="heroicons:plus" class="size-5" />Add item</twig:Button>
-        {% endif %}
+        {# Sort sits right beside Edit; viewers who cannot edit still get it. #}
+        <div class="flex flex-wrap items-center gap-3">
+            {# Not while selecting: changing the order reloads the page and would drop the ticks. #}
+            <div class="group-data-[selecting]/sel:hidden">{% include 'collections/_sort.html.twig' with {sort: sort, sorts: sorts, label: 'Sort items'} only %}</div>
+            {% if canEdit %}
+                {# Edit mode (shared with the collections list): the Edit button gives way to Select all, the action, Confirm and Cancel. #}
+                {% set bulkActions = (collection.importable ? [
+                    {kind: 'want', label: 'Wanna watch', icon: 'bookmark'},
+                    {kind: 'watched', label: 'Watched', icon: 'check-circle'},
+                    {kind: 'clear', label: 'Clear status', icon: 'x-circle'},
+                ] : [])|merge([{kind: 'remove', label: 'Remove', icon: 'trash'}]) %}
+                {% include 'collections/_bulk_controls.html.twig' with {actions: bulkActions, label: 'Edit items', noun: 'items'} only %}
+                {% if collection.importable %}
+                    <twig:Button as="a" variant="wine" size="md" href="{{ path('app_items_import', {id: collection.id}) }}" class="group-data-[selecting]/sel:hidden"><twig:ux:icon name="heroicons:plus" class="size-5" /></twig:Button>
+                {% endif %}
+            {% endif %}
+        </div>
     </div>
-    <ul class="grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr))]">
+    <ul class="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(min(150px,100%),1fr))]">
         {% for entry in entries %}
-            <li class="neu rounded-[28px] p-5">
-                <span class="font-semibold">{{ entry.item.name }}</span>
-                {% if entry.condition %}<span class="mt-1 block text-sm text-muted-ink">{{ entry.condition }}</span>{% endif %}
-                {% if entry.notes %}<p class="mt-2 text-sm text-muted-ink">{{ entry.notes }}</p>{% endif %}
+            <li class="neu group/card relative rounded-[22px] p-3 transition-shadow has-[:checked]:ring-2 has-[:checked]:ring-wine/70">
+                {% if canEdit %}
+                    {# Edit mode: clicking anywhere on the card ticks it (the label points at the checkbox) instead of opening the modal. #}
+                    <label for="pick-{{ entry.id }}" aria-hidden="true" class="absolute inset-0 z-[5] hidden cursor-pointer rounded-[22px] group-data-[selecting]/sel:block"></label>
+                    <twig:Checkbox id="pick-{{ entry.id }}" class="absolute left-4 top-4 z-10 hidden size-6 bg-cream! checked:bg-wine! group-data-[selecting]/sel:block" name="entry[]" value="{{ entry.id }}" form="bulk" aria-label="Select {{ entry.item.name }}" />
+                    <form method="post" action="{{ path('app_items_bulk', {id: collection.id}) }}" class="absolute right-5 top-5 z-10">
+                        <input type="hidden" name="_token" value="{{ csrf_token('bulk' ~ collection.id) }}">
+                        <input type="hidden" name="action" value="remove">
+                        <input type="hidden" name="entry[]" value="{{ entry.id }}">
+                        {# Hidden until the card is hovered, but only where hovering exists (touch screens keep it visible); keyboard focus shows it too. #}
+                        <twig:Button type="submit" variant="wine" size="icon" title="Remove from collection" aria-label="Remove {{ entry.item.name }} from collection" class="size-7 rounded-full transition-opacity pointer-fine:opacity-0 pointer-fine:group-hover/card:opacity-100 focus-visible:opacity-100"><twig:ux:icon name="heroicons:trash" class="size-4" /></twig:Button>
+                    </form>
+                {% endif %}
+                {% set a = entry.item.attributes ?? {} %}
+                <div data-controller="dialog">
+                    <button type="button" data-action="dialog#open" aria-haspopup="dialog" class="block w-full cursor-pointer text-left outline-none focus-visible:ring-2 focus-visible:ring-wine/40 rounded-xl">
+                        {% if entry.item.poster %}
+                            <img src="{{ entry.item.poster }}" alt="" loading="lazy" class="mb-2 aspect-[2/3] w-full rounded-xl object-cover">
+                        {% else %}
+                            <span class="inset mb-2 flex aspect-[2/3] w-full items-center justify-center rounded-xl font-serif text-4xl text-wine" aria-hidden="true">{{ entry.item.name|first|upper }}</span>
+                        {% endif %}
+                        <span class="block text-sm font-semibold leading-snug">{{ entry.item.name }}</span>
+                        {% if entry.condition %}<span class="mt-0.5 block text-xs text-muted-ink">{{ entry.condition }}</span>{% endif %}
+                        <span id="badge-{{ entry.id }}" class="block">{% if entry.statusLabel %}<span class="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-wine"><twig:ux:icon name="heroicons:{{ entry.status == 'watched' ? 'check-circle' : (entry.watchedTotal ? 'eye' : 'bookmark') }}" class="size-3.5" />{{ entry.statusLabel }}</span>{% endif %}</span>
+                    </button>
+                    <dialog data-dialog-target="dialog" data-action="click->dialog#backdrop" aria-label="{{ entry.item.name }}" class="neu m-auto h-[min(88vh,680px)] w-[min(94vw,960px)] rounded-[32px] p-0 text-ink open:flex open:flex-col backdrop:bg-ink/30 backdrop:backdrop-blur-sm">
+                        {% set kind = {movie: 'Movie', tv: 'TV show'}[a.type ?? ''] ?? null %}
+                        <header class="flex flex-none items-start justify-between gap-4 border-b border-ink/10 px-8 py-6">
+                            <div class="flex min-w-0 flex-col gap-2.5">
+                                <h2 class="text-3xl leading-tight">{{ entry.item.name }}</h2>
+                                {% if kind or a.year ?? null or a.seasons ?? null or a.episodes ?? null %}
+                                    <div class="flex flex-wrap gap-2">
+                                        {% if kind %}<span class="inset inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-wine"><twig:ux:icon name="heroicons:{{ a.type == 'tv' ? 'tv' : 'film' }}" class="size-4" />{{ kind }}</span>{% endif %}
+                                        {% if a.year ?? null %}<span class="inset inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-wine">{{ a.year }}</span>{% endif %}
+                                        {% if a.seasons ?? null %}<span class="inset inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-wine">{{ a.seasons }} season{{ a.seasons != 1 ? 's' : '' }}</span>{% endif %}
+                                        {% if a.episodes ?? null %}<span class="inset inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold text-wine">{{ a.episodes }} episode{{ a.episodes != 1 ? 's' : '' }}</span>{% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <twig:Button variant="neu" size="pill" data-action="dialog#close" class="flex-none">Close</twig:Button>
+                        </header>
+                        <div class="flex min-h-0 flex-1 flex-col gap-8 overflow-y-auto p-8 sm:flex-row">
+                            {% if entry.item.poster %}
+                                <img src="{{ entry.item.poster }}" alt="" loading="lazy" class="aspect-[2/3] w-60 flex-none sm:w-72 self-start rounded-2xl object-cover shadow-[8px_10px_24px_rgb(30_6_10/.28)]">
+                            {% else %}
+                                <span class="inset flex aspect-[2/3] w-60 flex-none sm:w-72 items-center justify-center self-start rounded-2xl font-serif text-8xl text-wine" aria-hidden="true">{{ entry.item.name|first|upper }}</span>
+                            {% endif %}
+                            <div class="flex min-w-0 flex-1 flex-col gap-6">
+                                {% include 'collections/_status.html.twig' with {entry: entry, collection: collection, canEdit: canEdit} only %}
+                                <section class="flex flex-col gap-2">
+                                    <h3 class="text-xs font-semibold uppercase tracking-[.14em] text-muted-ink">Overview</h3>
+                                    {% if a.overview ?? null %}
+                                        <p class="max-w-prose text-base leading-relaxed">{{ a.overview }}</p>
+                                    {% else %}
+                                        <p class="text-muted-ink">No description available.</p>
+                                    {% endif %}
+                                </section>
+                                {% if entry.condition or entry.notes %}
+                                    <section class="inset flex flex-col gap-4 rounded-2xl p-5">
+                                        <h3 class="text-xs font-semibold uppercase tracking-[.14em] text-muted-ink">In this collection</h3>
+                                        <dl class="grid gap-4 sm:grid-cols-[auto_1fr] sm:gap-x-8">
+                                            {% if entry.condition %}<div><dt class="text-xs font-semibold text-muted-ink">Condition</dt><dd class="mt-0.5 font-semibold">{{ entry.condition }}</dd></div>{% endif %}
+                                            {% if entry.notes %}<div class="min-w-0"><dt class="text-xs font-semibold text-muted-ink">Notes</dt><dd class="mt-0.5 whitespace-pre-line">{{ entry.notes }}</dd></div>{% endif %}
+                                        </dl>
+                                    </section>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </dialog>
+                </div>
             </li>
         {% else %}
             <li class="col-span-full text-muted-ink">{{ q ? 'No item matches your search.' : 'No items yet.' }}</li>
         {% endfor %}
     </ul>
+    {% if canEdit %}
+        <form id="bulk" method="post" action="{{ path('app_items_bulk', {id: collection.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('bulk' ~ collection.id) }}">
+            <input type="hidden" name="action" value="" data-selection-target="field">
+        </form>
+    {% endif %}
 </section>
 {% endblock %}

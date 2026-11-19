@@ -23,5 +23,11 @@
     </main>
 
     <twig:Navbar mobile />
+    {# Back link: pinned bottom-left of the content area, clear of the sidebar and of the floating mobile nav. Children fill `back`. #}
+    {% set backLink %}{% block back %}{% endblock %}{% endset %}
+    {% if backLink|trim %}
+        <div class="fixed bottom-[calc(max(1.25rem,env(safe-area-inset-bottom))+84px)] left-6 z-10 sm:bottom-7 sm:left-[152px] lg:left-[364px]">{{ backLink }}</div>
+    {% endif %}
+
 </div>
 {% endblock %}

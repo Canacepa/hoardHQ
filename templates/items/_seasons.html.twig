@@ -1,0 +1,58 @@
+{# Body of a TV show's modal on the import page, loaded the first time it opens. Params: tv, seasons (not in the collection yet),
+   remainingEpisodes (of those), total + episodes (the whole show), ownsFull (the show is held as one older combined item),
+   error. The buttons and checkboxes belong to the import form that wraps the page: submitting from here adds everything
+   ticked on the page. #}
+{% set label = 'text-xs font-semibold uppercase tracking-[.14em] text-muted-ink' %}
+<turbo-frame id="seasons-{{ tv }}">
+    {% if error %}
+        <p role="alert" class="text-sm text-destructive">{{ error }}</p>
+    {% elseif ownsFull %}
+        <p class="text-muted-ink">The full show is already in this collection.</p>
+    {% elseif total == 0 %}
+        <p class="text-muted-ink">TMDB lists no seasons for this show.</p>
+    {% else %}
+        <div class="flex flex-col gap-7">
+            {% if seasons %}
+                <section class="inset flex flex-wrap items-center justify-between gap-4 rounded-2xl p-5" aria-label="Full show">
+                    <p class="min-w-0">
+                        <span class="block font-semibold">The full show</span>
+                        <span class="text-sm text-muted-ink">
+                            {% if seasons|length == total %}All {{ total }} season{{ total != 1 ? 's' : '' }} · {{ episodes }} episode{{ episodes != 1 ? 's' : '' }}{% else %}The {{ seasons|length }} season{{ seasons|length != 1 ? 's' : '' }} you don't have yet · {{ remainingEpisodes }} episode{{ remainingEpisodes != 1 ? 's' : '' }}{% endif %},
+                            each added as its own item
+                        </span>
+                    </p>
+                    {# Seasons ticked below are not added twice: the show already adds them. #}
+                    <twig:Button type="submit" name="externalId[]" value="tv:{{ tv }}" variant="wine" size="md"><twig:ux:icon name="heroicons:plus" class="size-5" />Add full show</twig:Button>
+                </section>
+            {% endif %}
+
+            <section class="flex flex-col gap-3" aria-label="Seasons">
+                <h3 class="{{ label }}">Or pick seasons</h3>
+                {% if seasons %}
+                    <ul class="flex flex-col gap-3">
+                        {% for season in seasons %}
+                            {% set info = season.attributes.season_list[0] %}
+                            <li class="inset rounded-2xl has-[:checked]:ring-2 has-[:checked]:ring-wine/60">
+                                <label class="flex cursor-pointer items-center gap-3 p-3">
+                                    <twig:Checkbox name="externalId[]" value="{{ season.externalId }}" />
+                                    {% if season.attributes.poster %}
+                                        <img src="{{ season.attributes.poster }}" alt="" loading="lazy" class="h-20 w-14 flex-none rounded-lg object-cover">
+                                    {% else %}
+                                        <span class="neu-sm flex h-20 w-14 flex-none items-center justify-center rounded-lg font-serif text-xl text-wine" aria-hidden="true">{{ info.number }}</span>
+                                    {% endif %}
+                                    <span class="min-w-0">
+                                        <span class="block font-semibold">{{ info.name }}</span>
+                                        <span class="block text-sm text-muted-ink">{{ info.episodes }} episode{{ info.episodes != 1 ? 's' : '' }}{% if season.attributes.year %} · {{ season.attributes.year }}{% endif %}</span>
+                                    </span>
+                                </label>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <twig:Button type="submit" variant="neu" size="md" class="self-start"><twig:ux:icon name="heroicons:plus" class="size-5" />Add selected seasons</twig:Button>
+                {% else %}
+                    <p class="text-sm text-muted-ink">All of its seasons are already in this collection.</p>
+                {% endif %}
+            </section>
+        </div>
+    {% endif %}
+</turbo-frame>
