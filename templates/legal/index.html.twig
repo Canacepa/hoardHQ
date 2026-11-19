@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %} - Legal notice{% endblock %}
+
+{# Public page, so it sits on the base layout (no sidebar, nothing that needs a signed-in user). #}
+{% block body %}
+<div class="mx-auto flex min-h-dvh max-w-2xl flex-col gap-8 p-5 sm:p-8">
+    <a href="{{ path('app_home') }}" class="flex items-center gap-3 self-start">
+        <span class="neu-sm flex size-11 items-center justify-center rounded-2xl font-serif text-xl font-semibold text-wine" aria-hidden="true">H</span>
+        <span class="font-serif text-2xl font-semibold tracking-tight">Hoard<span class="text-wine">HQ</span></span>
+    </a>
+
+    <main class="neu flex flex-col gap-8 rounded-[32px] p-7 sm:p-10">
+        <h1 class="text-[40px] leading-[1.1]">Legal notice</h1>
+
+        <section class="flex flex-col gap-3" aria-labelledby="sources">
+            <h2 id="sources" class="text-xl">Data sources and credits</h2>
+            <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+            <p class="text-muted-ink">
+                Information about movies and TV shows, and their poster images, comes from
+                <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer" class="font-semibold text-wine underline underline-offset-2">The Movie Database (TMDB)</a>.
+            </p>
+        </section>
+    </main>
+
+    <twig:Button as="a" variant="neu" size="md" href="{{ path('app_home') }}" class="self-start">← Back to HoardHQ</twig:Button>
+</div>
+{% endblock %}

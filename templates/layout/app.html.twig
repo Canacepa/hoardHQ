@@ -20,14 +20,15 @@
 
     <main class="flex min-h-0 min-w-0 flex-1 flex-col gap-8 overflow-y-auto p-2 pb-32 sm:p-5 [&>*]:shrink-0">
         {% block content %}{% endblock %}
+        <footer class="mt-auto flex justify-end"><a href="{{ path('app_legal') }}" class="text-xs text-muted-ink underline-offset-2 hover:underline">Legal notice</a></footer>
     </main>
 
-    <twig:Navbar mobile />
     {# Back link: pinned bottom-left of the content area, clear of the sidebar and of the floating mobile nav. Children fill `back`. #}
     {% set backLink %}{% block back %}{% endblock %}{% endset %}
     {% if backLink|trim %}
         <div class="fixed bottom-[calc(max(1.25rem,env(safe-area-inset-bottom))+84px)] left-6 z-10 sm:bottom-7 sm:left-[152px] lg:left-[364px]">{{ backLink }}</div>
     {% endif %}
 
+    <twig:Navbar mobile />
 </div>
 {% endblock %}
