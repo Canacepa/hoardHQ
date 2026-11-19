@@ -68,9 +68,8 @@ final class UserController extends AbstractController
             'contributions' => ['Contributions', $user->getCollectionsContributor()],
             'followed' => ['Followed collections', $user->getCollectionsFollowed()],
         };
-        // Other people only see the public ones, newest update first.
+        // Other people only see the public ones.
         $collections = array_filter($all->toArray(), fn (Collections $c) => $isSelf || $c->isPublic());
-        usort($collections, fn (Collections $a, Collections $b) => [$b->getUpdatedAt(), $b->getId()] <=> [$a->getUpdatedAt(), $a->getId()]);
         $categories = $grouper->categories($collections);
         $category = array_values(array_filter((array) ($request->query->all()['category'] ?? []), 'is_string'));
         $collections = $grouper->filter($collections, $category);
@@ -78,9 +77,13 @@ final class UserController extends AbstractController
         if ($q !== '') {
             $collections = array_values(array_filter($collections, static fn (Collections $c) => false !== mb_stripos($c->getName() . ' ' . $c->getDescription() . ' ' . $c->getOwner()->getUsername(), $q)));
         }
+        $sort = $grouper->sortFrom($request->query->getString('sort')); // recently updated unless asked otherwise
+        $collections = $grouper->sort($collections, $sort);
 
         return $this->render('user/collections.html.twig', [
             'q' => $q,
+            'sort' => $sort,
+            'sorts' => CollectionGrouper::SORTS,
             'user' => $user,
             'isSelf' => $isSelf,
             'title' => $title,
@@ -88,7 +91,7 @@ final class UserController extends AbstractController
             'collections' => $collections,
             'categories' => $categories,
             'category' => $category,
-            'view' => $request->query->getString('view') === 'grouped' ? 'grouped' : 'grid',
+            'view' => $grouper->viewFrom($request->query->getString('view'), 'grid'),
         ] + $grouper->group($collections));
     }
 

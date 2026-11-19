@@ -1,4 +1,4 @@
-{# Collections in one of two displays: `grouped` (a scrolling row per category) or `grid`; the switch is _view_toggle.
+{# Collections in one of three displays: `grouped` (a scrolling row per category), `grid` or `list` (one row each); the switch is _view_toggle.
    Params: collections (flat, ordered), groups, uncategorised, view, categoryLinks (show "See all" per category), empty (message),
    owner + type (username and list type, needed to link "N more…" when categoryLinks is false).
    In `grouped` each row shows only the cards that fit one line, the rest collapse into an "N more…" tile. #}
@@ -42,6 +42,12 @@
             </div>
         </section>
     {% endif %}
+{% elseif view == 'list' %}
+    <section aria-label="Collections" class="flex flex-col gap-3">
+        {% for collection in collections %}
+            {% include 'collections/_row.html.twig' %}
+        {% endfor %}
+    </section>
 {% else %}
     <section aria-label="Collections" class="grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr))]">
         {% for collection in collections %}

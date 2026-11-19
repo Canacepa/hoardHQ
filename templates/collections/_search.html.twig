@@ -1,7 +1,8 @@
-{# Search box for a collections list; keeps the current display and filter.
-   Params: action, view, category, q, label. #}
+{# Search box for a collections list; keeps the current display, filter and sort.
+   Params: action, view, category, sort, q, label. #}
 <form method="get" action="{{ action }}" role="search" class="flex min-w-[220px] flex-1 items-center gap-3 sm:max-w-md">
     <input type="hidden" name="view" value="{{ view }}">
+    <input type="hidden" name="sort" value="{{ sort }}">
     {% for slug in category %}<input type="hidden" name="category[]" value="{{ slug }}">{% endfor %}
     <label class="inset flex h-12 min-w-0 flex-1 items-center gap-2.5 rounded-full px-5 text-muted-ink focus-within:ring-2 focus-within:ring-wine/40">
         <twig:ux:icon name="heroicons:magnifying-glass" class="size-5 shrink-0" />

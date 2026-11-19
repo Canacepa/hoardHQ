@@ -1,15 +1,16 @@
-{# Category filter (multiple choice) and display switch (grouped / grid) for a collections list.
-   Params: view, categories, category (list of selected slugs). #}
+{# Category filter (multiple choice), sort and display switch (grouped / grid) for a collections list.
+   Params: view, categories, category (list of selected slugs), sort (the current key), sorts (key => label; the first is the default). #}
 {% set params = app.request.attributes.get('_route_params')|merge(app.request.query.all) %}
 {% set action = path(app.current_route, app.request.attributes.get('_route_params')) %}
 <div class="flex flex-wrap items-center gap-3">
     {% if categories|length %}
         <details class="relative" data-controller="dropdown">
             <summary class="{{ category|length ? 'inset' : 'neu-sm' }} flex h-11 cursor-pointer list-none items-center gap-2 rounded-full px-5 text-sm font-semibold text-wine outline-none focus-visible:ring-2 focus-visible:ring-wine/40 [&::-webkit-details-marker]:hidden">
-                <twig:ux:icon name="heroicons:funnel" class="size-5" />Filter{% if category|length %} · {{ category|length }}{% endif %}
+                <twig:ux:icon name="heroicons:funnel" class="size-5" />{% if category|length %} · {{ category|length }}{% endif %}
             </summary>
             <form method="get" action="{{ action }}" class="neu absolute right-0 top-full z-20 mt-3 flex w-64 flex-col gap-3 rounded-[24px] p-4">
                 <input type="hidden" name="view" value="{{ view }}">
+                <input type="hidden" name="sort" value="{{ sort }}">
                 {% if app.request.query.getString('q') %}<input type="hidden" name="q" value="{{ app.request.query.getString('q') }}">{% endif %}
                 <fieldset class="flex max-h-64 flex-col gap-1 overflow-y-auto">
                     <legend class="mb-2 text-sm font-semibold">Categories</legend>
@@ -27,9 +28,13 @@
             </form>
         </details>
     {% endif %}
-    <div class="flex gap-3" role="group" aria-label="Display">
-        {% for option in [{view: 'grouped', label: 'By category', icon: 'list-bullet'}, {view: 'grid', label: 'Grid', icon: 'squares-2x2'}] %}
-            <twig:Button as="a" variant="{{ view == option.view ? 'inset' : 'neu' }}" size="pill" href="{{ path(app.current_route, params|merge({view: option.view})) }}" aria-pressed="{{ view == option.view ? 'true' : 'false' }}"><twig:ux:icon name="heroicons:{{ option.icon }}" class="size-5" />{{ option.label }}</twig:Button>
+    {% include 'collections/_sort.html.twig' with {sort: sort, sorts: sorts, label: 'Sort collections'} only %}
+    {# One pill split in parts (a segmented control), the same height as Filter and Sort: the current view is pressed in. #}
+    <div class="neu-sm inline-flex h-11 divide-x divide-ink/10 overflow-hidden rounded-full" role="group" aria-label="Display">
+        {% for option in [{view: 'grouped', label: 'By category', icon: 'list-bullet'}, {view: 'grid', label: 'Grid', icon: 'squares-2x2'}, {view: 'list', label: 'List', icon: 'queue-list'}] %}
+            <a href="{{ path(app.current_route, params|merge({view: option.view})) }}" aria-pressed="{{ view == option.view ? 'true' : 'false' }}" class="flex items-center gap-2 px-5 text-sm font-semibold text-wine outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-wine/40 {{ view == option.view ? 'inset' : 'hover:bg-white/35' }}">
+                <twig:ux:icon name="heroicons:{{ option.icon }}" class="size-5" />
+            </a>
         {% endfor %}
     </div>
 </div>

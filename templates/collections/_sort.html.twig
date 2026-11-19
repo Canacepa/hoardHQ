@@ -1,0 +1,16 @@
+{# Sort menu, shared by the collections lists and the items of a collection. It links to the current page with ?sort=<key>, keeping
+   whatever else is in the query (search, filter, view). Params: sort (current key), sorts (key => label; the first is the default), label. #}
+{% set params = app.request.attributes.get('_route_params')|merge(app.request.query.all) %}
+{% set defaultSort = sorts|keys|first %}
+<details class="relative" data-controller="dropdown">
+    <summary class="{{ sort != defaultSort ? 'inset' : 'neu-sm' }} flex h-11 cursor-pointer list-none items-center gap-2 rounded-full px-5 text-sm font-semibold text-wine outline-none focus-visible:ring-2 focus-visible:ring-wine/40 [&::-webkit-details-marker]:hidden">
+        <twig:ux:icon name="heroicons:arrows-up-down" class="size-5" />{% if sort != defaultSort %} · {{ sorts[sort] }}{% endif %}
+    </summary>
+    <div role="menu" aria-label="{{ label }}" class="neu absolute right-0 top-full z-20 mt-3 flex w-60 flex-col gap-0.5 rounded-[24px] p-2">
+        {% for key, text in sorts %}
+            <a role="menuitemradio" aria-checked="{{ key == sort ? 'true' : 'false' }}" href="{{ path(app.current_route, params|merge({sort: key})) }}" class="flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold outline-none hover:bg-white/35 focus-visible:ring-2 focus-visible:ring-wine/40 {{ key == sort ? 'text-wine' : 'text-ink' }}">
+                {{ text }}{% if key == sort %}<twig:ux:icon name="heroicons:check" class="size-4" />{% endif %}
+            </a>
+        {% endfor %}
+    </div>
+</details>

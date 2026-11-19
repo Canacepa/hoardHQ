@@ -1,0 +1,5 @@
+{# Edit mode on the collections list: ticking a collection. A label over the whole card ticks it (so a click selects instead of opening
+   the collection) and the checkbox sits in its corner; both only show while the list is in edit mode. Both sit inside a wrapper that
+   is position:relative. Params: collection, rounded (the card's corner radius class), pos (where the checkbox goes). #}
+<label for="pick-{{ collection.id }}" aria-hidden="true" class="absolute inset-0 z-[5] hidden cursor-pointer {{ rounded }} group-data-[selecting]/sel:block"></label>
+<twig:Checkbox id="pick-{{ collection.id }}" class="absolute {{ pos }} z-10 hidden size-6 bg-cream! checked:bg-wine! group-data-[selecting]/sel:block" name="entry[]" value="{{ collection.id }}" form="bulk" aria-label="Select {{ collection.name }}" />

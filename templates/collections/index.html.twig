@@ -3,11 +3,32 @@
 {% block title %} - Collections{% endblock %}
 
 {% block content %}
-<header class="flex flex-wrap items-center justify-between gap-4">
-    <h1 class="text-[46px] leading-[1.1]">Your collections</h1>
-    {% include 'collections/_search.html.twig' with {action: path('app_collections'), view: view, category: category, q: q, label: 'Search your collections'} only %}
-    {% include 'collections/_view_toggle.html.twig' with {view: view, categories: categories, category: category} only %}
-</header>
+{# Edit mode (remove, make public, make private) is the same selection controller as inside a collection. "contents": this wrapper
+   adds no box of its own, it only carries the controller and the group/sel the edit-mode styles hang on. #}
+<div class="group/sel contents" data-controller="selection" data-action="change->selection#count">
+    <header class="flex flex-wrap items-center justify-between gap-4">
+        <h1 class="text-[46px] leading-[1.1]">Your collections</h1>
+        {% include 'collections/_search.html.twig' with {action: path('app_collections'), view: view, category: category, sort: sort, q: q, label: 'Search your collections'} only %}
+        <div class="flex flex-wrap items-center gap-3">
+            {# Not while selecting: changing the view or the order reloads the page and would drop the ticks. #}
+            <div class="group-data-[selecting]/sel:hidden">{% include 'collections/_view_toggle.html.twig' with {view: view, categories: categories, category: category, sort: sort, sorts: sorts} only %}</div>
+            {% include 'collections/_bulk_controls.html.twig' with {
+                actions: [
+                    {kind: 'public', label: 'Make public', icon: 'globe-alt'},
+                    {kind: 'private', label: 'Make private', icon: 'lock-closed'},
+                    {kind: 'remove', label: 'Remove', icon: 'trash'},
+                ],
+                label: 'Edit collections',
+                noun: 'collections',
+            } only %}
+        </div>
+    </header>
 
-{% include 'collections/_list.html.twig' with {collections: collections, groups: groups, uncategorised: uncategorised, view: view, categoryLinks: true, empty: "You don't have any collections yet. Create one now!"} only %}
+    {% include 'collections/_list.html.twig' with {collections: collections, groups: groups, uncategorised: uncategorised, view: view, categoryLinks: true, selectable: true, empty: "You don't have any collections yet. Create one now!"} only %}
+
+    <form id="bulk" method="post" action="{{ path('app_collections_bulk') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('bulk-collections') }}">
+        <input type="hidden" name="action" value="" data-selection-target="field">
+    </form>
+</div>
 {% endblock %}

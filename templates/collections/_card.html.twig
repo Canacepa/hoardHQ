@@ -1,6 +1,8 @@
-{# Optional param: showCategory (adds the category tag, used by the grid display). #}
+{# Optional params: showCategory (adds the category tag, used by the grid display), selectable (the collections list in edit mode can tick it). #}
 {% import '_macros/category.html.twig' as cat %}
-<a href="/collections/{{ collection.id }}" class="neu group flex flex-col gap-4 rounded-[28px] p-5 transition-transform hover:-translate-y-0.5">
+{% set selectable = selectable|default(false) %}
+{% if selectable %}<div class="relative rounded-[28px] transition-shadow has-[:checked]:ring-2 has-[:checked]:ring-wine/70">{% endif %}
+<a href="/collections/{{ collection.id }}" class="neu group flex flex-col gap-4 rounded-[28px] p-5 transition-transform hover:-translate-y-0.5{{ selectable ? ' h-full' : '' }}"{{ selectable ? ' data-selection-inert' : '' }}>
     <div class="inset flex h-[124px] items-center justify-center rounded-[20px]" aria-hidden="true">
         <span class="neu-sm flex size-[72px] items-center justify-center rounded-full font-serif text-4xl font-semibold text-wine">{{ collection.name|first|upper }}</span>
     </div>
@@ -12,3 +14,7 @@
         <span class="inset inline-flex max-w-full items-center gap-1.5 self-start rounded-full px-3 py-1.5 text-xs font-semibold text-wine"><twig:ux:icon name="{{ cat.icon(collection.visibleCategory.name) }}" class="size-4 shrink-0" /><span class="truncate">{{ collection.visibleCategory.name }}</span></span>
     {% endif %}
 </a>
+{% if selectable %}
+    {% include 'collections/_pick.html.twig' with {collection: collection, rounded: 'rounded-[28px]', pos: 'left-4 top-4'} only %}
+</div>
+{% endif %}

@@ -15,9 +15,11 @@ use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Form\CollectionsFormType;
 use App\Repository\CategoriesRepository;
+use App\Service\CollectionBulkEditor;
 use App\Service\CollectionGrouper;
 use App\Repository\CollectionsRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Exception\BadRequestHttpException;
 use Symfony\Component\HttpFoundation\Request;
 
 final class CollectionsController extends AbstractController
@@ -28,20 +30,24 @@ final class CollectionsController extends AbstractController
     {
         /** @var User $user */
         $user = $this->getUser();
-        $all = $this->latestFirst($user->getCollectionsOwned()->toArray());
+        $all = $user->getCollectionsOwned()->toArray();
         $category = array_values(array_filter((array) ($request->query->all()['category'] ?? []), 'is_string'));
         $collections = $grouper->filter($all, $category);
         $q = trim($request->query->getString('q'));
         if ($q !== '') {
             $collections = array_values(array_filter($collections, static fn (Collections $c) => false !== mb_stripos($c->getName() . ' ' . $c->getDescription(), $q)));
         }
+        $sort = $grouper->sortFrom($request->query->getString('sort'));
+        $collections = $grouper->sort($collections, $sort);
 
         return $this->render('collections/index.html.twig', [
             'q' => $q,
+            'sort' => $sort,
+            'sorts' => CollectionGrouper::SORTS,
             'collections' => $collections,
             'categories' => $grouper->categories($all),
             'category' => $category,
-            'view' => $request->query->getString('view') === 'grid' ? 'grid' : 'grouped',
+            'view' => $grouper->viewFrom($request->query->getString('view'), 'grouped'),
         ] + $grouper->group($collections));
     }
 
@@ -234,6 +240,33 @@ final class CollectionsController extends AbstractController
         }
 
         return $this->render('collections/edit.html.twig', ['collection' => $collection, 'form' => $form->createView()]);
+    }
+
+    /**
+     * Edit mode on the collections list: removes, publishes or hides the ticked collections. Only the user's own are touched
+     * (see CollectionBulkEditor); anyone else's ids in the request are ignored.
+     */
+    #[Route('/collections/bulk', name: 'app_collections_bulk', methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function bulkCollections(Request $request, CollectionBulkEditor $editor): Response
+    {
+        if (!$this->isCsrfTokenValid('bulk-collections', $request->getPayload()->getString('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+        $action = $request->getPayload()->getString('action');
+        if (!\in_array($action, CollectionBulkEditor::ACTIONS, true)) {
+            throw new BadRequestHttpException();
+        }
+
+        $ids = array_filter($request->getPayload()->all('entry'), static fn ($id) => \is_string($id) && ctype_digit($id));
+        /** @var User $user */
+        $user = $this->getUser();
+        $editor->apply($action, $ids, $user);
+
+        // Back to the list as it was (view, sort, filter), but only to a page of this site.
+        $referer = $request->headers->get('referer');
+
+        return $this->redirect($referer !== null && str_starts_with($referer, $request->getSchemeAndHttpHost() . '/') ? $referer : $this->generateUrl('app_collections'));
     }
 
     /**
