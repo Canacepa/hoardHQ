@@ -194,6 +194,7 @@ final class CollectionsController extends AbstractController
 
         $q = trim($request->query->getString('q'));
         $results = [];
+        $series = [];
         $error = null;
         try {
             if ($request->isMethod('POST')) {
@@ -212,6 +213,8 @@ final class CollectionsController extends AbstractController
             if ($q !== '') {
                 $owned = array_flip($entries->externalIds($collection, $api::SOURCE));
                 $results = array_values(array_filter($api->search($q, $collection->getImportType()), static fn (array $r) => !isset($owned[$r['externalId']])));
+                // volumes that belong to a series are offered as the whole series too
+                $series = $api === $books ? $books->seriesIn($results) : [];
             }
         } catch (HttpClientException $e) {
             $error = match ($api) {
@@ -222,7 +225,42 @@ final class CollectionsController extends AbstractController
             };
         }
 
-        return $this->render('items/import.html.twig', ['collection' => $collection, 'q' => $q, 'results' => $results, 'error' => $error]);
+        return $this->render('items/import.html.twig', ['collection' => $collection, 'q' => $q, 'results' => $results, 'series' => $series, 'error' => $error]);
+    }
+
+    /**
+     * The body of a book series' modal on the import page, a Turbo frame loaded the first time the modal opens: the volumes
+     * Google Books has for the series that the collection doesn't hold yet, each addable, and an "Add full series" button.
+     */
+    #[Route('/collections/{id}/items/import/series/{key}', name: 'app_items_series', requirements: ['id' => '\d+', 'key' => '[A-Za-z0-9_-]{1,300}'], methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function showSeries(Collections $collection, string $key, GoogleBooksProvider $books, CollectionItemRepository $entries): Response
+    {
+        if (!$this->canEdit($collection, $this->getUser())) {
+            throw $this->createAccessDeniedException();
+        }
+        if (!\in_array($collection->getImportType(), ['book', 'comic'], true)) {
+            throw $this->createNotFoundException();
+        }
+
+        $series = ['volumes' => [], 'missing' => [], 'complete' => true];
+        $error = null;
+        try {
+            $series = $books->seriesVolumes($key);
+        } catch (HttpClientException) {
+            $error = 'The volumes could not be loaded. Try again later.';
+        }
+        $owned = array_flip($entries->externalIds($collection, GoogleBooksProvider::SOURCE));
+        $available = array_values(array_filter($series['volumes'], static fn (array $v) => !isset($owned[$v['externalId']])));
+
+        return $this->render('items/_series.html.twig', [
+            'key' => $key,
+            'volumes' => $available,
+            'total' => \count($series['volumes']),
+            'missing' => $series['missing'],
+            'complete' => $series['complete'],
+            'error' => $error,
+        ]);
     }
 
     /** Marks an entry as wanna-watch / watched, or clears it (empty status). Only movie and TV collections have it. */
