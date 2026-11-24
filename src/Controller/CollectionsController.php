@@ -214,7 +214,8 @@ final class CollectionsController extends AbstractController
                 $owned = array_flip($entries->externalIds($collection, $api::SOURCE));
                 $results = array_values(array_filter($api->search($q, $collection->getImportType()), static fn (array $r) => !isset($owned[$r['externalId']])));
                 // volumes that belong to a series are offered as the whole series too
-                $series = $api === $books ? $books->seriesIn($results) : [];
+                // (manga by volume number in the titles, novels from Hardcover's list of series)
+                $series = $api !== $books ? [] : ($collection->getImportType() === 'book' ? $books->novelSeriesIn($q) : $books->seriesIn($results));
             }
         } catch (HttpClientException $e) {
             $error = match ($api) {

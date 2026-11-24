@@ -5,6 +5,7 @@ namespace App\Service;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Contracts\HttpClient\ResponseInterface;
 
@@ -40,6 +41,7 @@ final class GoogleBooksProvider
     public function __construct(
         private HttpClientInterface $http,
         private CacheInterface $cache,
+        private HardcoverProvider $hardcover,
         #[Autowire(env: 'GOOGLE_BOOKS_API_KEY')] private string $key,
     ) {
     }
@@ -59,7 +61,7 @@ final class GoogleBooksProvider
      * Series that several of these search results belong to, most volumes first.
      *
      * @param list<array{externalId: string, name: string, attributes: array<string, mixed>}> $results
-     * @return list<array{key: string, name: string, language: string|null, found: int, poster: string|null}>
+     * @return list<array{key: string, name: string, summary: string, poster: string|null}>
      */
     public function seriesIn(array $results): array
     {
@@ -78,12 +80,37 @@ final class GoogleBooksProvider
         $series = [];
         foreach ($groups as $key => $g) {
             if (\count($g['volumes']) >= 2) {
-                $series[] = ['key' => $key, 'name' => $g['name'], 'language' => $g['language'], 'found' => \count($g['volumes']), 'poster' => $g['poster']];
+                $series[] = ['key' => $key, 'name' => $g['name'], 'summary' => ($g['language'] ? strtoupper($g['language']) . ' · ' : '') . \count($g['volumes']) . ' volumes in these results', 'poster' => $g['poster'], 'found' => \count($g['volumes'])];
             }
         }
         usort($series, static fn (array $a, array $b) => $b['found'] <=> $a['found']);
 
         return $series;
+    }
+
+    /**
+     * Novel series that match a search text, from Hardcover (novels have no volume numbers in their titles to recognise a
+     * series by). Nothing when Hardcover is not set up or cannot be reached: the search itself still works without it.
+     *
+     * @return list<array{key: string, name: string, summary: string, poster: string|null}>
+     */
+    public function novelSeriesIn(string $query): array
+    {
+        if (!$this->hardcover->isConfigured()) {
+            return [];
+        }
+        try {
+            $found = $this->hardcover->searchSeries($query);
+        } catch (ExceptionInterface) {
+            return [];
+        }
+
+        return array_map(static fn (array $s) => [
+            'key' => 'hc' . $s['id'],
+            'name' => $s['name'],
+            'summary' => ($s['author'] ? $s['author'] . ' · ' : '') . $s['books'] . ' books',
+            'poster' => null,
+        ], $found);
     }
 
     /**
@@ -95,6 +122,15 @@ final class GoogleBooksProvider
      */
     public function seriesVolumes(string $key): array
     {
+        if (preg_match('/^hc(\d{1,9})$/', $key, $m)) {
+            return $this->cache->get('gb_novels_' . $m[1], function (ItemInterface $item) use ($m) {
+                $series = $this->collectNovelSeries((int) $m[1]);
+                $item->expiresAfter($series['complete'] ? 3600 : 60);
+
+                return $series;
+            });
+        }
+
         [$language, $stem] = $this->decodeKey($key) ?? [null, null];
         if ($stem === null) {
             return ['volumes' => [], 'missing' => [], 'complete' => true];
@@ -122,7 +158,7 @@ final class GoogleBooksProvider
         foreach (array_unique($externalIds) as $externalId) {
             if (preg_match('/^book:([A-Za-z0-9_-]{1,40})$/', $externalId, $m)) {
                 $responses['book:' . $m[1]] = $this->http->request('GET', self::API . '/' . $m[1], ['query' => $this->withKey([]), 'timeout' => 10]);
-            } elseif (preg_match('/^bookseries:([A-Za-z0-9_-]{1,300})$/', $externalId, $m)) {
+            } elseif (preg_match('/^bookseries:([A-Za-z0-9_-]{1,300})$/', $externalId, $m)) { // title-based ("<base64>") or novel ("hc<id>")
                 $series[$externalId] = $m[1];
             }
         }
@@ -142,6 +178,50 @@ final class GoogleBooksProvider
         }
 
         return array_values($items);
+    }
+
+    /**
+     * A novel series: Hardcover says which books it has and an ISBN for each, Google Books supplies the books. A book whose
+     * first ISBN Google does not know is tried with its second; one Google has neither of is reported as missing (by title).
+     *
+     * @return array{volumes: list<array>, missing: list<string>, complete: bool}
+     */
+    private function collectNovelSeries(int $id): array
+    {
+        $started = microtime(true);
+        $series = $this->hardcover->seriesBooks($id);
+
+        $lookup = function (string $isbn): ?array {
+            $found = $this->readVolumes($this->volumesRequest(['q' => 'isbn:' . $isbn, 'maxResults' => 1, 'printType' => 'books']));
+
+            return $found[0] ?? null;
+        };
+
+        $volumes = [];
+        $missing = [];
+        $complete = true;
+        foreach ($series['books'] as $book) {
+            if (microtime(true) - $started > self::SERIES_BUDGET) {
+                $complete = false;
+                break;
+            }
+            $volume = null;
+            foreach ($book['isbns'] as $isbn) {
+                if ($volume = $lookup($isbn)) {
+                    break;
+                }
+            }
+            if ($volume === null) {
+                $missing[] = $book['title'];
+                continue;
+            }
+            $volume['attributes']['series'] = $series['name'] ?: null;
+            $volume['attributes']['volume'] = $book['position'] == (int) $book['position'] ? (int) $book['position'] : $book['position'];
+            unset($volume['_template']);
+            $volumes[$volume['externalId']] ??= $volume;
+        }
+
+        return ['volumes' => array_values($volumes), 'missing' => $missing, 'complete' => $complete];
     }
 
     /** @return array{volumes: list<array>, missing: list<int>, complete: bool} */

@@ -41,7 +41,7 @@
                 {% endif %}
                 <span class="flex min-w-0 flex-1 flex-col gap-1">
                     <span class="font-semibold">{{ s.name }}</span>
-                    <span class="text-sm text-muted-ink">Series{% if s.language %} · {{ s.language|upper }}{% endif %} · {{ s.found }} volumes in these results</span>
+                    <span class="text-sm text-muted-ink">Series · {{ s.summary }}</span>
                     <span class="mt-auto inline-flex items-center gap-1 pt-2 text-sm font-semibold text-wine">All volumes<twig:ux:icon name="heroicons:chevron-right" class="size-4" /></span>
                 </span>
             </button>

@@ -3,6 +3,7 @@
 namespace App\Tests\Service;
 
 use App\Service\GoogleBooksProvider;
+use App\Service\HardcoverProvider;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\HttpClient\MockHttpClient;
@@ -11,6 +12,7 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 final class GoogleBooksProviderTest extends TestCase
 {
     private array $urls = [];
+    private ?HardcoverProvider $hardcover = null;
 
     private function volume(string $id = 'abc123'): array
     {
@@ -28,7 +30,7 @@ final class GoogleBooksProviderTest extends TestCase
             $this->urls[] = $url;
 
             return $answer($url);
-        }), new ArrayAdapter(), $key);
+        }), new ArrayAdapter(), $this->hardcover ?? new HardcoverProvider(new MockHttpClient(fn () => $this->fail('no Hardcover request expected')), new ArrayAdapter(), ''), $key);
     }
 
     public function testSearchNormalizesVolumes(): void
@@ -101,7 +103,7 @@ final class GoogleBooksProviderTest extends TestCase
         $series = $provider->seriesIn($provider->search('one piece'));
 
         $this->assertCount(1, $series); // one volume alone is not a series
-        $this->assertSame(['One Piece', 'fr', 2], [$series[0]['name'], $series[0]['language'], $series[0]['found']]);
+        $this->assertSame(['One Piece', 'FR · 2 volumes in these results'], [$series[0]['name'], $series[0]['summary']]);
     }
 
     public function testASeriesIsFilledInVolumeByVolumeAndCached(): void
@@ -134,5 +136,41 @@ final class GoogleBooksProviderTest extends TestCase
         $this->assertSame([], $provider->seriesVolumes('not base64!')['volumes']);
         $this->assertSame([], $provider->seriesVolumes(rtrim(base64_encode('no separator'), '='))['volumes']);
         $this->assertSame([], $provider->fetchMany(['bookseries:', 'bookseries:../x']));
+    }
+
+    public function testNovelSeriesComeFromHardcoverAndTheirBooksFromGoogleByIsbn(): void
+    {
+        $this->hardcover = new HardcoverProvider(new MockHttpClient(function (string $method, string $url, array $options) {
+            $body = json_decode($options['body'], true);
+            if (str_contains($body['query'], 'search(')) {
+                return new MockResponse(json_encode(['data' => ['search' => ['results' => ['hits' => [['document' => ['id' => '9', 'name' => 'Saga', 'author_name' => 'A. Author', 'primary_books_count' => 3]]]]]]]));
+            }
+            $row = fn (float $p, string $t, string ...$isbns) => ['position' => $p, 'book' => ['title' => $t, 'users_count' => 1, 'editions' => array_map(fn ($i) => ['isbn_13' => $i], $isbns)]];
+
+            return new MockResponse(json_encode(['data' => ['series_by_pk' => ['name' => 'Saga'], 'book_series' => $body['variables']['l'] === 'fr'
+                ? [$row(1, 'Un', '111'), $row(1.5, 'Entre', '222', '223'), $row(2, 'Deux', '333')] : []]]));
+        }), new ArrayAdapter(), 'tok');
+        // Google knows 111, and 223 (the second ISBN of "Entre") but not 333
+        $provider = $this->provider(function (string $url) {
+            preg_match('/isbn:(\d+)/', urldecode($url), $m);
+
+            return new MockResponse(json_encode(['items' => in_array($m[1] ?? '', ['111', '223'], true) ? [['id' => 'g' . $m[1], 'volumeInfo' => ['title' => 'Livre ' . $m[1]]]] : []]));
+        });
+
+        $cards = $provider->novelSeriesIn('saga');
+        $this->assertSame([['key' => 'hc9', 'name' => 'Saga', 'summary' => 'A. Author · 3 books', 'poster' => null]], $cards);
+
+        $series = $provider->seriesVolumes('hc9');
+
+        $this->assertSame(['book:g111', 'book:g223'], array_column($series['volumes'], 'externalId'));
+        $this->assertSame([['Saga', 1], ['Saga', 1.5]], array_map(fn ($v) => [$v['attributes']['series'], $v['attributes']['volume']], $series['volumes']));
+        $this->assertSame(['Deux'], $series['missing']);
+        $this->assertSame(['book:g111', 'book:g223'], array_column($provider->fetchMany(['bookseries:hc9']), 'externalId'));
+        $this->assertArrayNotHasKey('_template', $series['volumes'][0]);
+    }
+
+    public function testNovelSeriesAreSkippedWhenHardcoverIsNotSetUp(): void
+    {
+        $this->assertSame([], $this->provider(fn () => $this->fail('no request expected'))->novelSeriesIn('saga'));
     }
 }
