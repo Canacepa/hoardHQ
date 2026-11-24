@@ -26,7 +26,7 @@ final class EntrySorter
             return array_diff_key(self::SORTS, ['status' => true]);
         }
 
-        return $collection->getImportType() === 'game' ? ['status' => 'Wanted first'] + self::SORTS : self::SORTS;
+        return \in_array($collection->getImportType(), ['game', 'boardgame'], true) ? ['status' => 'Wanted first'] + self::SORTS : self::SORTS;
     }
 
     /** The sort to use for a value from the query string: itself when this collection offers it, otherwise the default. */

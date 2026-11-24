@@ -129,7 +129,7 @@ class Collections
     }
 
     /**
-     * What this collection can hold, as the kind of item its API provides: "movie" or "tv" (TMDB), "game" (IGDB). Null when the category has
+     * What this collection can hold, as the kind of item its API provides: "movie" or "tv" (TMDB), "game" (IGDB), "boardgame" (BGG). Null when the category has
      * no item API behind it (yet), which means nothing can be added.
      */
     public function getImportType(): ?string
@@ -138,12 +138,13 @@ class Collections
             'Movies' => 'movie',
             'TV Shows' => 'tv',
             'Video Games' => 'game',
+            'Board Games' => 'boardgame',
             default => null,
         };
     }
 
     /**
-     * The statuses an entry can have, value => label: watch state for movies and TV, ownership for games.
+     * The statuses an entry can have, value => label: watch state for movies and TV, ownership for games and board games.
      *
      * @return array<string, string>
      */
@@ -151,7 +152,7 @@ class Collections
     {
         return match ($this->getImportType()) {
             'movie', 'tv' => ['want' => 'Wanna watch', 'watched' => 'Watched'],
-            'game' => ['want' => 'Wanted', 'owned' => 'Owned'],
+            'game', 'boardgame' => ['want' => 'Wanted', 'owned' => 'Owned'],
             default => [],
         };
     }

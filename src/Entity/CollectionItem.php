@@ -119,7 +119,7 @@ class CollectionItem
 
     public function getStatusLabel(): ?string
     {
-        if (($this->item?->getAttributes()['type'] ?? null) === 'game') {
+        if (\in_array($this->item?->getAttributes()['type'] ?? null, ['game', 'boardgame'], true)) {
             $label = ['want' => 'Wanted', 'owned' => 'Owned'][$this->status ?? ''] ?? null;
 
             return $label && $this->platform ? "$label · $this->platform" : $label;

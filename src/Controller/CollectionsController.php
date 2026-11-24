@@ -17,6 +17,7 @@ use App\Repository\CollectionItemRepository;
 use App\Service\CollectionBulkEditor;
 use App\Service\CollectionGrouper;
 use App\Service\EntrySorter;
+use App\Service\BggProvider;
 use App\Service\IgdbProvider;
 use App\Service\ItemImporter;
 use App\Service\TmdbProvider;
@@ -174,7 +175,7 @@ final class CollectionsController extends AbstractController
     /** The only way to add items: they come from an external API, never from user input. */
     #[Route('/collections/{id}/items/import', name: 'app_items_import', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_USER')]
-    public function importItem(Collections $collection, Request $request, TmdbProvider $tmdb, IgdbProvider $igdb, ItemImporter $importer, CollectionItemRepository $entries): Response
+    public function importItem(Collections $collection, Request $request, TmdbProvider $tmdb, IgdbProvider $igdb, BggProvider $bgg, ItemImporter $importer, CollectionItemRepository $entries): Response
     {
         if (!$this->canEdit($collection, $this->getUser())) {
             throw $this->createAccessDeniedException();
@@ -182,8 +183,12 @@ final class CollectionsController extends AbstractController
         if (!$collection->isImportable()) {
             throw $this->createNotFoundException();
         }
-        // Video Games come from IGDB, movies and TV from TMDB.
-        $api = $collection->getImportType() === 'game' ? $igdb : $tmdb;
+        // Video Games come from IGDB, Board Games from BGG, movies and TV from TMDB.
+        $api = match ($collection->getImportType()) {
+            'game' => $igdb,
+            'boardgame' => $bgg,
+            default => $tmdb,
+        };
 
         $q = trim($request->query->getString('q'));
         $results = [];
@@ -207,7 +212,11 @@ final class CollectionsController extends AbstractController
                 $results = array_values(array_filter($api->search($q, $collection->getImportType()), static fn (array $r) => !isset($owned[$r['externalId']])));
             }
         } catch (HttpClientException $e) {
-            $error = ($api === $igdb ? 'IGDB could not be reached. Check that IGDB_CLIENT_ID and IGDB_CLIENT_SECRET are set, or try again later.' : 'TMDB could not be reached. Check that TMDB_API_TOKEN is set, or try again later.');
+            $error = match ($api) {
+                $igdb => 'IGDB could not be reached. Check that IGDB_CLIENT_ID and IGDB_CLIENT_SECRET are set, or try again later.',
+                $bgg => 'BoardGameGeek could not be reached. Check that BGG_API_TOKEN is set, or try again later.',
+                default => 'TMDB could not be reached. Check that TMDB_API_TOKEN is set, or try again later.',
+            };
         }
 
         return $this->render('items/import.html.twig', ['collection' => $collection, 'q' => $q, 'results' => $results, 'error' => $error]);
