@@ -22,7 +22,7 @@ final class EntrySorter
     /** @return array<string, string> the sorts that make sense for this collection */
     public function optionsFor(Collections $collection): array
     {
-        return $collection->isImportable() ? self::SORTS : array_diff_key(self::SORTS, ['status' => true]);
+        return $collection->hasStatus() ? self::SORTS : array_diff_key(self::SORTS, ['status' => true]);
     }
 
     /** The sort to use for a value from the query string: itself when this collection offers it, otherwise the default. */

@@ -1,7 +1,7 @@
 {# Status block of the item modal. Params: entry, collection, canEdit.
    Movies, and TV shows without season data: a Wanna watch / Watched toggle.
    TV shows with season data: progress, then one row per season (mark it whole), expandable to tick single episodes. #}
-{% if collection.importable and (canEdit or entry.statusLabel) %}
+{% if collection.hasStatus and (canEdit or entry.statusLabel) %}
     {% set eid = entry.id %}
     {% set label = 'text-xs font-semibold uppercase tracking-[.14em] text-muted-ink' %}
     <section id="status-{{ eid }}" data-controller="status" data-badge="badge-{{ eid }}" class="flex flex-col gap-3">

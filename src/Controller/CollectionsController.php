@@ -17,6 +17,7 @@ use App\Repository\CollectionItemRepository;
 use App\Service\CollectionBulkEditor;
 use App\Service\CollectionGrouper;
 use App\Service\EntrySorter;
+use App\Service\IgdbProvider;
 use App\Service\ItemImporter;
 use App\Service\TmdbProvider;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpClientException;
@@ -173,7 +174,7 @@ final class CollectionsController extends AbstractController
     /** The only way to add items: they come from an external API, never from user input. */
     #[Route('/collections/{id}/items/import', name: 'app_items_import', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_USER')]
-    public function importItem(Collections $collection, Request $request, TmdbProvider $tmdb, ItemImporter $importer, CollectionItemRepository $entries): Response
+    public function importItem(Collections $collection, Request $request, TmdbProvider $tmdb, IgdbProvider $igdb, ItemImporter $importer, CollectionItemRepository $entries): Response
     {
         if (!$this->canEdit($collection, $this->getUser())) {
             throw $this->createAccessDeniedException();
@@ -181,6 +182,8 @@ final class CollectionsController extends AbstractController
         if (!$collection->isImportable()) {
             throw $this->createNotFoundException();
         }
+        // Video Games come from IGDB, movies and TV from TMDB.
+        $api = $collection->getImportType() === 'game' ? $igdb : $tmdb;
 
         $q = trim($request->query->getString('q'));
         $results = [];
@@ -192,19 +195,19 @@ final class CollectionsController extends AbstractController
                 }
                 // Re-fetch by id: the catalog is shared, so nothing but the ids is taken from the request.
                 $ids = array_slice(array_filter($request->getPayload()->all('externalId'), 'is_string'), 0, self::MAX_IMPORT);
-                $found = $tmdb->fetchMany($ids, $collection->getImportType()) ?: throw $this->createNotFoundException();
+                $found = $api->fetchMany($ids, $collection->getImportType()) ?: throw $this->createNotFoundException();
                 foreach ($found as $data) {
-                    $importer->add($collection, TmdbProvider::SOURCE, $data);
+                    $importer->add($collection, $api::SOURCE, $data);
                 }
 
                 return $this->redirectToRoute('app_collections_show', ['id' => $collection->getId()]);
             }
             if ($q !== '') {
-                $owned = array_flip($entries->externalIds($collection, TmdbProvider::SOURCE));
-                $results = array_values(array_filter($tmdb->search($q, $collection->getImportType()), static fn (array $r) => !isset($owned[$r['externalId']])));
+                $owned = array_flip($entries->externalIds($collection, $api::SOURCE));
+                $results = array_values(array_filter($api->search($q, $collection->getImportType()), static fn (array $r) => !isset($owned[$r['externalId']])));
             }
         } catch (HttpClientException $e) {
-            $error = 'TMDB could not be reached. Check that TMDB_API_TOKEN is set, or try again later.';
+            $error = ($api === $igdb ? 'IGDB could not be reached. Check that IGDB_CLIENT_ID and IGDB_CLIENT_SECRET are set, or try again later.' : 'TMDB could not be reached. Check that TMDB_API_TOKEN is set, or try again later.');
         }
 
         return $this->render('items/import.html.twig', ['collection' => $collection, 'q' => $q, 'results' => $results, 'error' => $error]);
@@ -251,7 +254,7 @@ final class CollectionsController extends AbstractController
             || !$this->isCsrfTokenValid('status' . $collection->getId(), $request->getPayload()->getString('_token'))) {
             throw $this->createAccessDeniedException();
         }
-        if (!$collection->isImportable()) {
+        if (!$collection->hasStatus()) {
             throw $this->createNotFoundException();
         }
 
@@ -317,7 +320,7 @@ final class CollectionsController extends AbstractController
         if ($action !== 'remove' && !\array_key_exists($action, $statuses)) {
             throw new BadRequestHttpException();
         }
-        if ($action !== 'remove' && !$collection->isImportable()) {
+        if ($action !== 'remove' && !$collection->hasStatus()) {
             throw $this->createNotFoundException(); // only movie and TV collections have a status
         }
 

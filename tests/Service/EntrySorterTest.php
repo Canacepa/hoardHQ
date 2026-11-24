@@ -45,7 +45,7 @@ final class EntrySorterTest extends TestCase
 
         $this->assertArrayHasKey('status', $sorter->optionsFor($this->collectionIn('Movies')));
         $this->assertArrayHasKey('status', $sorter->optionsFor($this->collectionIn('TV Shows')));
-        foreach (['Books', 'Video Games', null] as $category) {
+        foreach (['Books', null] as $category) {
             $options = $sorter->optionsFor($this->collectionIn($category));
             $this->assertArrayNotHasKey('status', $options, (string) $category);
             $this->assertCount(count(EntrySorter::SORTS) - 1, $options);

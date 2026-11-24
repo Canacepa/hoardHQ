@@ -129,7 +129,7 @@ class Collections
     }
 
     /**
-     * What this collection can hold, as the kind of item its API provides: "movie" or "tv" (TMDB). Null when the category has
+     * What this collection can hold, as the kind of item its API provides: "movie" or "tv" (TMDB), "game" (IGDB). Null when the category has
      * no item API behind it (yet), which means nothing can be added.
      */
     public function getImportType(): ?string
@@ -137,8 +137,15 @@ class Collections
         return match ($this->getVisibleCategory()?->getName()) {
             'Movies' => 'movie',
             'TV Shows' => 'tv',
+            'Video Games' => 'game',
             default => null,
         };
+    }
+
+    /** Whether entries carry a watch status: movies and TV only. */
+    public function hasStatus(): bool
+    {
+        return \in_array($this->getImportType(), ['movie', 'tv'], true);
     }
 
     /** Whether items can be added at all. */

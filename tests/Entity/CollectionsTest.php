@@ -19,12 +19,15 @@ final class CollectionsTest extends TestCase
     {
         $this->assertSame('movie', $this->in('Movies')->getImportType());
         $this->assertSame('tv', $this->in('TV Shows')->getImportType());
+        $this->assertSame('game', $this->in('Video Games')->getImportType());
         $this->assertTrue($this->in('Movies')->isImportable());
+        $this->assertTrue($this->in('Movies')->hasStatus());
+        $this->assertFalse($this->in('Video Games')->hasStatus(), 'games are not watched');
     }
 
     public function testCategoriesWithoutAnItemApiCannotImport(): void
     {
-        foreach (['Books', 'Video Games', 'Board Games', 'Comics & Manga'] as $category) {
+        foreach (['Books', 'Board Games', 'Comics & Manga'] as $category) {
             $this->assertNull($this->in($category)->getImportType(), $category);
             $this->assertFalse($this->in($category)->isImportable(), $category);
         }
