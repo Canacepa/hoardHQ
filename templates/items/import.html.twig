@@ -73,7 +73,7 @@
             {% endif %}
             <div class="flex min-w-0 flex-1 flex-col gap-1">
                 <span class="font-semibold">{{ result.name }}</span>
-                <span class="text-sm text-muted-ink">{{ {tv: 'TV show', game: 'Game', boardgame: 'Board game', book: 'Book'}[result.attributes.type] ?? 'Movie' }}{% if result.attributes.year %} · {{ result.attributes.year }}{% endif %}{% if result.attributes.platforms %} · {{ result.attributes.platforms|slice(0, 4)|join(', ') }}{% endif %}{% if result.attributes.authors ?? null %} · {{ result.attributes.authors }}{% endif %}{% if result.attributes.players ?? null %} · {{ result.attributes.players }} players{% endif %}</span>
+                <span class="text-sm text-muted-ink">{{ {tv: 'TV show', game: 'Game', boardgame: 'Board game', book: 'Book'}[result.attributes.type] ?? 'Movie' }}{% if result.attributes.year %} · {{ result.attributes.year }}{% endif %}{% if result.attributes.platforms ?? null %} · {{ result.attributes.platforms|slice(0, 4)|join(', ') }}{% endif %}{% if result.attributes.authors ?? null %} · {{ result.attributes.authors }}{% endif %}{% if result.attributes.players ?? null %} · {{ result.attributes.players }} players{% endif %}</span>
                 {% if result.attributes.overview %}<p class="line-clamp-3 text-sm text-muted-ink">{{ result.attributes.overview }}</p>{% endif %}
             </div>
         </label></li>

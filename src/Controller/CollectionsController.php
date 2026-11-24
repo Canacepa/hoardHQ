@@ -217,7 +217,7 @@ final class CollectionsController extends AbstractController
             $error = match ($api) {
                 $igdb => 'IGDB could not be reached. Check that IGDB_CLIENT_ID and IGDB_CLIENT_SECRET are set, or try again later.',
                 $bgg => 'BoardGameGeek could not be reached. Check that BGG_API_TOKEN is set, or try again later.',
-                $books => 'Google Books could not be reached. Try again later.',
+                $books => 'Google Books could not be reached. If it says the quota is exceeded, set GOOGLE_BOOKS_API_KEY, or try again later.',
                 default => 'TMDB could not be reached. Check that TMDB_API_TOKEN is set, or try again later.',
             };
         }
