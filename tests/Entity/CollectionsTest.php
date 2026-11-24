@@ -21,17 +21,22 @@ final class CollectionsTest extends TestCase
         $this->assertSame('tv', $this->in('TV Shows')->getImportType());
         $this->assertSame('game', $this->in('Video Games')->getImportType());
         $this->assertSame('boardgame', $this->in('Board Games')->getImportType());
+        $this->assertSame('book', $this->in('Books')->getImportType());
+        $this->assertSame('comic', $this->in('Comics & Manga')->getImportType());
         $this->assertTrue($this->in('Movies')->isImportable());
         $this->assertTrue($this->in('Movies')->hasStatus());
         $this->assertSame(['want', 'owned'], array_keys($this->in('Video Games')->getStatusOptions()));
         $this->assertSame(['want', 'owned'], array_keys($this->in('Board Games')->getStatusOptions()));
+        $this->assertSame(['want', 'owned', 'ebook'], array_keys($this->in('Comics & Manga')->getStatusOptions()));
+        $this->assertTrue($this->in('Books')->hasReadFlag());
+        $this->assertFalse($this->in('Movies')->hasReadFlag());
         $this->assertSame(['want', 'watched'], array_keys($this->in('TV Shows')->getStatusOptions()));
-        $this->assertFalse($this->in('Books')->hasStatus());
+        $this->assertFalse($this->in('Vinyl & Music')->hasStatus());
     }
 
     public function testCategoriesWithoutAnItemApiCannotImport(): void
     {
-        foreach (['Books', 'Comics & Manga'] as $category) {
+        foreach (['Vinyl & Music', 'Toys & Figurines'] as $category) {
             $this->assertNull($this->in($category)->getImportType(), $category);
             $this->assertFalse($this->in($category)->isImportable(), $category);
         }

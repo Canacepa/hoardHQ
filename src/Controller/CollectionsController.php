@@ -18,6 +18,7 @@ use App\Service\CollectionBulkEditor;
 use App\Service\CollectionGrouper;
 use App\Service\EntrySorter;
 use App\Service\BggProvider;
+use App\Service\GoogleBooksProvider;
 use App\Service\IgdbProvider;
 use App\Service\ItemImporter;
 use App\Service\TmdbProvider;
@@ -175,7 +176,7 @@ final class CollectionsController extends AbstractController
     /** The only way to add items: they come from an external API, never from user input. */
     #[Route('/collections/{id}/items/import', name: 'app_items_import', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_USER')]
-    public function importItem(Collections $collection, Request $request, TmdbProvider $tmdb, IgdbProvider $igdb, BggProvider $bgg, ItemImporter $importer, CollectionItemRepository $entries): Response
+    public function importItem(Collections $collection, Request $request, TmdbProvider $tmdb, IgdbProvider $igdb, BggProvider $bgg, GoogleBooksProvider $books, ItemImporter $importer, CollectionItemRepository $entries): Response
     {
         if (!$this->canEdit($collection, $this->getUser())) {
             throw $this->createAccessDeniedException();
@@ -183,10 +184,11 @@ final class CollectionsController extends AbstractController
         if (!$collection->isImportable()) {
             throw $this->createNotFoundException();
         }
-        // Video Games come from IGDB, Board Games from BGG, movies and TV from TMDB.
+        // Video Games come from IGDB, Board Games from BGG, books and manga from Google Books, movies and TV from TMDB.
         $api = match ($collection->getImportType()) {
             'game' => $igdb,
             'boardgame' => $bgg,
+            'book', 'comic' => $books,
             default => $tmdb,
         };
 
@@ -215,6 +217,7 @@ final class CollectionsController extends AbstractController
             $error = match ($api) {
                 $igdb => 'IGDB could not be reached. Check that IGDB_CLIENT_ID and IGDB_CLIENT_SECRET are set, or try again later.',
                 $bgg => 'BoardGameGeek could not be reached. Check that BGG_API_TOKEN is set, or try again later.',
+                $books => 'Google Books could not be reached. Try again later.',
                 default => 'TMDB could not be reached. Check that TMDB_API_TOKEN is set, or try again later.',
             };
         }
@@ -253,6 +256,23 @@ final class CollectionsController extends AbstractController
             throw new BadRequestHttpException();
         }
         $item->setPlatform($platform ?: null);
+        $collection->touch();
+        $em->flush();
+
+        return $this->redirectToRoute('app_collections_show', ['id' => $collection->getId()]);
+    }
+
+    /** Books and manga: marks an entry as read or not read (the Read flag is separate from the status). */
+    #[Route('/collections/{id}/items/{entry}/read', name: 'app_items_read', requirements: ['id' => '\d+', 'entry' => '\d+'], methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function setItemRead(Collections $collection, int $entry, Request $request, EntityManagerInterface $em, CollectionItemRepository $entries): Response
+    {
+        $item = $this->entryToUpdate($collection, $entry, $request, $entries);
+
+        if (!$collection->hasReadFlag()) {
+            throw new BadRequestHttpException();
+        }
+        $item->setRead($request->getPayload()->getBoolean('read'));
         $collection->touch();
         $em->flush();
 
@@ -344,7 +364,8 @@ final class CollectionsController extends AbstractController
         }
 
         $action = $request->getPayload()->getString('action');
-        if ($action !== 'remove' && $action !== 'clear' && !isset($collection->getStatusOptions()[$action])) {
+        $reads = $collection->hasReadFlag() ? ['read' => true, 'unread' => false] : [];
+        if ($action !== 'remove' && $action !== 'clear' && !isset($collection->getStatusOptions()[$action]) && !isset($reads[$action])) {
             throw new BadRequestHttpException();
         }
         if ($action !== 'remove' && !$collection->hasStatus()) {
@@ -354,7 +375,13 @@ final class CollectionsController extends AbstractController
         $ids = array_filter($request->getPayload()->all('entry'), static fn ($id) => \is_string($id) && ctype_digit($id));
         // Scoped to this collection, so ids belonging to other collections are ignored.
         foreach ($ids ? $entries->findBy(['collection' => $collection, 'id' => $ids]) : [] as $entry) {
-            $action === 'remove' ? $em->remove($entry) : $entry->applyStatus($action === 'clear' ? null : $action);
+            if ($action === 'remove') {
+                $em->remove($entry);
+            } elseif (isset($reads[$action])) {
+                $entry->setRead($reads[$action]);
+            } else {
+                $entry->applyStatus($action === 'clear' ? null : $action);
+            }
         }
         $collection->touch();
         $em->flush();

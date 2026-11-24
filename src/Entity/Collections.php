@@ -129,7 +129,7 @@ class Collections
     }
 
     /**
-     * What this collection can hold, as the kind of item its API provides: "movie" or "tv" (TMDB), "game" (IGDB), "boardgame" (BGG). Null when the category has
+     * What this collection can hold, as the kind of item its API provides: "movie" or "tv" (TMDB), "game" (IGDB), "boardgame" (BGG), "book" and "comic" (Google Books). Null when the category has
      * no item API behind it (yet), which means nothing can be added.
      */
     public function getImportType(): ?string
@@ -139,6 +139,8 @@ class Collections
             'TV Shows' => 'tv',
             'Video Games' => 'game',
             'Board Games' => 'boardgame',
+            'Books' => 'book',
+            'Comics & Manga' => 'comic',
             default => null,
         };
     }
@@ -153,8 +155,15 @@ class Collections
         return match ($this->getImportType()) {
             'movie', 'tv' => ['want' => 'Wanna watch', 'watched' => 'Watched'],
             'game', 'boardgame' => ['want' => 'Wanted', 'owned' => 'Owned'],
+            'book', 'comic' => ['want' => 'Wanted', 'owned' => 'Owned', 'ebook' => 'Ebook'],
             default => [],
         };
+    }
+
+    /** Books and manga also carry a separate Read flag. */
+    public function hasReadFlag(): bool
+    {
+        return \in_array($this->getImportType(), ['book', 'comic'], true);
     }
 
     public function hasStatus(): bool

@@ -1,13 +1,13 @@
 {% extends 'layout/app.html.twig' %}
 
-{% block title %} - Import from {{ {game: 'IGDB', boardgame: 'BoardGameGeek'}[collection.importType] ?? 'TMDB' }}{% endblock %}
+{% block title %} - Import from {{ {game: 'IGDB', boardgame: 'BoardGameGeek', book: 'Google Books', comic: 'Google Books'}[collection.importType] ?? 'TMDB' }}{% endblock %}
 
 {% block back %}
     <twig:Button as="a" variant="neu" size="md" href="{{ path('app_collections_show', {id: collection.id}) }}">← Back to {{ collection.name }}</twig:Button>
 {% endblock %}
 
 {% block content %}
-{% set noun = {tv: 'TV shows', game: 'games', boardgame: 'board games'}[collection.importType] ?? 'movies' %}
+{% set noun = {tv: 'TV shows', game: 'games', boardgame: 'board games', book: 'books', comic: 'manga and comics'}[collection.importType] ?? 'movies' %}
 <h1 class="text-[40px]">Import into {{ collection.name }}</h1>
 
 <div class="flex flex-wrap items-center justify-between gap-4">
@@ -15,7 +15,7 @@
     <label class="inset flex h-12 min-w-0 flex-1 items-center gap-2.5 rounded-full px-5 text-muted-ink focus-within:ring-2 focus-within:ring-wine/40">
         <twig:ux:icon name="heroicons:magnifying-glass" class="size-5 shrink-0" />
         <span class="sr-only">Search {{ noun }}</span>
-        <input type="search" name="q" value="{{ q }}" placeholder="Search {{ noun }}" autofocus class="min-w-0 flex-1 bg-transparent text-base text-ink outline-none placeholder:text-muted-ink/80">
+        <input type="search" name="q" value="{{ q }}" placeholder="Search {{ noun }}{{ collection.importType in ['book', 'comic'] ? ' or enter an ISBN' : '' }}" autofocus class="min-w-0 flex-1 bg-transparent text-base text-ink outline-none placeholder:text-muted-ink/80">
     </label>
     <twig:Button type="submit" variant="wine" size="md">Search</twig:Button>
 </form>
@@ -73,7 +73,7 @@
             {% endif %}
             <div class="flex min-w-0 flex-1 flex-col gap-1">
                 <span class="font-semibold">{{ result.name }}</span>
-                <span class="text-sm text-muted-ink">{{ {tv: 'TV show', game: 'Game', boardgame: 'Board game'}[result.attributes.type] ?? 'Movie' }}{% if result.attributes.year %} · {{ result.attributes.year }}{% endif %}{% if result.attributes.platforms %} · {{ result.attributes.platforms|slice(0, 4)|join(', ') }}{% endif %}{% if result.attributes.players ?? null %} · {{ result.attributes.players }} players{% endif %}</span>
+                <span class="text-sm text-muted-ink">{{ {tv: 'TV show', game: 'Game', boardgame: 'Board game', book: 'Book'}[result.attributes.type] ?? 'Movie' }}{% if result.attributes.year %} · {{ result.attributes.year }}{% endif %}{% if result.attributes.platforms %} · {{ result.attributes.platforms|slice(0, 4)|join(', ') }}{% endif %}{% if result.attributes.authors ?? null %} · {{ result.attributes.authors }}{% endif %}{% if result.attributes.players ?? null %} · {{ result.attributes.players }} players{% endif %}</span>
                 {% if result.attributes.overview %}<p class="line-clamp-3 text-sm text-muted-ink">{{ result.attributes.overview }}</p>{% endif %}
             </div>
         </label></li>

@@ -45,7 +45,7 @@ final class EntrySorterTest extends TestCase
 
         $this->assertArrayHasKey('status', $sorter->optionsFor($this->collectionIn('Movies')));
         $this->assertArrayHasKey('status', $sorter->optionsFor($this->collectionIn('TV Shows')));
-        foreach (['Books', null] as $category) {
+        foreach (['Vinyl & Music', null] as $category) {
             $options = $sorter->optionsFor($this->collectionIn($category));
             $this->assertArrayNotHasKey('status', $options, (string) $category);
             $this->assertCount(count(EntrySorter::SORTS) - 1, $options);
@@ -56,12 +56,12 @@ final class EntrySorterTest extends TestCase
     {
         $sorter = new EntrySorter();
         $movies = $this->collectionIn('Movies');
-        $books = $this->collectionIn('Books');
+        $books = $this->collectionIn('Vinyl & Music');
 
         foreach (array_keys(EntrySorter::SORTS) as $key) {
             $this->assertSame($key, $sorter->sortFrom($key, $movies));
         }
-        $this->assertSame('added', $sorter->sortFrom('status', $books)); // asked for by hand, but a Books collection has no status
+        $this->assertSame('added', $sorter->sortFrom('status', $books)); // asked for by hand, but a collection without an item API has no status
         foreach ([null, '', 'bogus', 'NAME', '../x', 'name;drop'] as $bad) {
             $this->assertSame('added', $sorter->sortFrom($bad, $movies), (string) $bad);
         }

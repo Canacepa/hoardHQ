@@ -14,7 +14,8 @@ class CollectionItem
     public const WANT = 'want';
     public const WATCHED = 'watched';
     public const OWNED = 'owned';
-    public const STATUSES = [self::WANT, self::WATCHED, self::OWNED];
+    public const EBOOK = 'ebook';
+    public const STATUSES = [self::WANT, self::WATCHED, self::OWNED, self::EBOOK];
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -39,6 +40,10 @@ class CollectionItem
     /** Watch state for movies and TV (want, watched) or ownership of a game (want, owned): one of STATUSES, or null when not set. */
     #[ORM\Column(length: 20, nullable: true)]
     private ?string $status = null;
+
+    /** Books and manga: whether it has been read, independent of the status (owned / ebook / wanted). */
+    #[ORM\Column(name: 'is_read', options: ['default' => false])]
+    private bool $read = false;
 
     /** Games: the platform this entry is for, one of the item's platforms. Only set together with a status. */
     #[ORM\Column(length: 100, nullable: true)]
@@ -105,6 +110,18 @@ class CollectionItem
         return $this;
     }
 
+    public function isRead(): bool
+    {
+        return $this->read;
+    }
+
+    public function setRead(bool $read): static
+    {
+        $this->read = $read;
+
+        return $this;
+    }
+
     public function getPlatform(): ?string
     {
         return $this->platform;
@@ -119,10 +136,11 @@ class CollectionItem
 
     public function getStatusLabel(): ?string
     {
-        if (\in_array($this->item?->getAttributes()['type'] ?? null, ['game', 'boardgame'], true)) {
-            $label = ['want' => 'Wanted', 'owned' => 'Owned'][$this->status ?? ''] ?? null;
+        if (\in_array($this->item?->getAttributes()['type'] ?? null, ['game', 'boardgame', 'book'], true)) {
+            $label = ['want' => 'Wanted', 'owned' => 'Owned', 'ebook' => 'Ebook'][$this->status ?? ''] ?? null;
+            $label = $label && $this->platform ? "$label · $this->platform" : $label;
 
-            return $label && $this->platform ? "$label · $this->platform" : $label;
+            return $this->read ? ($label ? "$label · Read" : 'Read') : $label;
         }
         if ($this->status === self::WATCHED) {
             return 'Watched';

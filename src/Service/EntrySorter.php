@@ -26,7 +26,7 @@ final class EntrySorter
             return array_diff_key(self::SORTS, ['status' => true]);
         }
 
-        return \in_array($collection->getImportType(), ['game', 'boardgame'], true) ? ['status' => 'Wanted first'] + self::SORTS : self::SORTS;
+        return $collection->getStatusOptions()['want'] === 'Wanted' ? ['status' => 'Wanted first'] + self::SORTS : self::SORTS;
     }
 
     /** The sort to use for a value from the query string: itself when this collection offers it, otherwise the default. */
@@ -71,7 +71,7 @@ final class EntrySorter
     private static function statusRank(CollectionItem $entry): int
     {
         return match (true) {
-            $entry->getStatus() === CollectionItem::WATCHED, $entry->getStatus() === CollectionItem::OWNED => 3,
+            $entry->getStatus() === CollectionItem::WATCHED, $entry->getStatus() === CollectionItem::OWNED, $entry->getStatus() === CollectionItem::EBOOK => 3,
             $entry->getWatchedTotal() > 0 => 1,
             $entry->getStatus() === CollectionItem::WANT => 0,
             default => 2,

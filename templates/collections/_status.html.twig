@@ -78,6 +78,14 @@
                     {% endfor %}
                 </div>
             {% endif %}
+            {% if collection.hasReadFlag %}
+                {# Separate from the status: a book can be owned and read, or wanted and not read. #}
+                <form method="post" data-action="submit->status#save" action="{{ path('app_items_read', {id: collection.id, entry: eid}) }}" class="mt-2">
+                    <input type="hidden" name="_token" value="{{ csrf_token('status' ~ collection.id) }}">
+                    <input type="hidden" name="read" value="{{ entry.read ? '' : '1' }}">
+                    <twig:Button type="submit" variant="{{ entry.read ? 'wine' : 'neu' }}" size="pill" aria-pressed="{{ entry.read ? 'true' : 'false' }}"><twig:ux:icon name="heroicons:check-circle" class="size-4" />Read</twig:Button>
+                </form>
+            {% endif %}
         {% else %}
             <p class="font-semibold">{{ entry.statusLabel }}</p>
         {% endif %}

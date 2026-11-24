@@ -133,4 +133,20 @@ final class CollectionItemTest extends TestCase
         $this->assertNull($entry->getPlatform());
         $this->assertNull($entry->getStatusLabel());
     }
+
+    public function testABookIsOwnedWantedOrAnEbookAndReadIsSeparate(): void
+    {
+        $entry = (new CollectionItem())->setItem((new Items())->setName('One Piece 1')->setAttributes(['type' => 'book']));
+        $this->assertNull($entry->getStatusLabel());
+
+        $entry->setRead(true);
+        $this->assertSame('Read', $entry->getStatusLabel());
+
+        $entry->applyStatus(CollectionItem::EBOOK);
+        $this->assertSame('Ebook · Read', $entry->getStatusLabel());
+
+        $entry->applyStatus(null); // clearing the status leaves the read flag alone
+        $this->assertTrue($entry->isRead());
+        $this->assertSame('Read', $entry->getStatusLabel());
+    }
 }
