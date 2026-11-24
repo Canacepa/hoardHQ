@@ -58,8 +58,14 @@ class Collections
     #[ORM\OrderBy(['id' => 'DESC'])]
     private Collection $entries;
 
+    /** The file name of a cover picture the user uploaded (see CollectionCover), if any. */
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $thumbnail = null;
+
+    /** An item of this collection whose poster is the cover; cleared by the database when the item leaves the collection. */
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(onDelete: 'SET NULL')]
+    private ?CollectionItem $coverEntry = null;
 
     #[ORM\Column(options: ['default' => false])]
     private bool $public = false;
@@ -242,6 +248,24 @@ class Collections
         $this->thumbnail = $thumbnail;
 
         return $this;
+    }
+
+    public function getCoverEntry(): ?CollectionItem
+    {
+        return $this->coverEntry;
+    }
+
+    public function setCoverEntry(?CollectionItem $coverEntry): static
+    {
+        $this->coverEntry = $coverEntry;
+
+        return $this;
+    }
+
+    /** The cover picture to show: the uploaded one, or the poster of the chosen item; null means the default icon. */
+    public function getCoverUrl(): ?string
+    {
+        return $this->thumbnail ? '/uploads/covers/' . $this->thumbnail : $this->coverEntry?->getItem()?->getPoster();
     }
 
     /**

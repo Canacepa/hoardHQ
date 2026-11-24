@@ -15,8 +15,8 @@
 
 {% block content %}
 <section class="neu flex flex-wrap items-center gap-6 rounded-[32px] p-7">
-    <span class="inset flex size-24 flex-none items-center justify-center rounded-[24px] text-wine" aria-hidden="true">
-        {% if collection.visibleCategory %}<twig:ux:icon name="{{ cat.icon(collection.visibleCategory.name) }}" class="size-10" />{% else %}<span class="font-serif text-4xl font-semibold">{{ collection.name|first|upper }}</span>{% endif %}
+    <span class="inset flex size-24 flex-none items-center justify-center overflow-hidden rounded-[24px] text-wine" aria-hidden="true">
+        {% if collection.coverUrl %}<img src="{{ collection.coverUrl }}" alt="" loading="lazy" class="size-full object-cover">{% elseif collection.visibleCategory %}<twig:ux:icon name="{{ cat.icon(collection.visibleCategory.name) }}" class="size-10" />{% else %}<span class="font-serif text-4xl font-semibold">{{ collection.name|first|upper }}</span>{% endif %}
     </span>
     <div class="min-w-[240px] flex-1">
         <div class="flex flex-wrap items-center gap-3">

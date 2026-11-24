@@ -12,7 +12,12 @@ use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\Image;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Validator\Constraints\Callback;
+use Symfony\Component\Validator\Constraints\File;
+use Symfony\Component\Validator\Context\ExecutionContextInterface;
+use App\Service\CollectionCover;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 
 class CollectionsFormType extends AbstractType
 {
@@ -48,23 +53,41 @@ class CollectionsFormType extends AbstractType
                 'label_attr' => ['class' => '!mb-0'],
             ])
 
-            // ->add('thumbnailFile', FileType::class, [
-            //     'label' => 'Thumbnail (Image file)',
-            //     'mapped' => false,
-            //     'required' => false,
-            //     'constraints' => [
-            //         new Image([
-            //             'maxSize' => '5M',
-            //             'mimeTypes' => [
-            //                 'image/jpeg',
-            //                 'image/png',
-            //                 'image/gif',
-            //             ],
-            //             'mimeTypesMessage' => 'Please upload a valid image file (JPEG, PNG, GIF)',
-            //         ])
-            //     ],
-            // ])
         ;
+
+        // The cover, as one choice (the default icon, the picture the collection has, or the poster of one of its items) plus
+        // a file input for a new picture. Neither is mapped; CollectionCover applies them (see the controller).
+        $collection = $builder->getData();
+        $labels = [CollectionCover::DEFAULT => 'Default icon', CollectionCover::UPLOAD => 'My picture'];
+        $posters = [];
+        foreach ($collection?->getId() ? $collection->getEntries() : [] as $entry) {
+            if ($poster = $entry->getItem()?->getPoster()) {
+                $labels['item-' . $entry->getId()] = $entry->getItem()->getName();
+                $posters['item-' . $entry->getId()] = $poster;
+            }
+        }
+        $builder->add('cover', ChoiceType::class, [
+            'label' => 'Cover',
+            'mapped' => false,
+            'expanded' => true,
+            'choices' => array_keys($labels),
+            'choice_label' => fn (string $value) => $labels[$value],
+            'choice_attr' => fn (string $value) => isset($posters[$value]) ? ['data-poster' => $posters[$value]] : [],
+            'data' => $collection ? CollectionCover::choiceOf($collection) : CollectionCover::DEFAULT,
+        ]);
+        $builder->add('coverUpload', FileType::class, [
+            'label' => 'Picture',
+            'mapped' => false,
+            'required' => false,
+            'constraints' => [
+                new File(maxSize: '5M'),
+                new Callback(static function (?UploadedFile $file, ExecutionContextInterface $context): void {
+                    if ($file !== null && CollectionCover::imageExtension($file->getPathname()) === null) {
+                        $context->buildViolation('Please upload a JPEG, PNG or WebP picture.')->addViolation();
+                    }
+                }),
+            ],
+        ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

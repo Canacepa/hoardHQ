@@ -30,3 +30,7 @@
 ###> node ###
 /node_modules/
 ###< node ###
+
+###> uploads ###
+/public/uploads/
+###< uploads ###

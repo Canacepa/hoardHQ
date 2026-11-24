@@ -15,6 +15,7 @@ use App\Form\CollectionsFormType;
 use App\Repository\CategoriesRepository;
 use App\Repository\CollectionItemRepository;
 use App\Service\CollectionBulkEditor;
+use App\Service\CollectionCover;
 use App\Service\CollectionGrouper;
 use App\Service\EntrySorter;
 use App\Service\BggProvider;
@@ -154,7 +155,7 @@ final class CollectionsController extends AbstractController
 
     #[Route('/collections/new', name: 'app_collections_new')]
     #[IsGranted('ROLE_USER')]
-    public function newCollection(Request $request, EntityManagerInterface $em): Response
+    public function newCollection(Request $request, EntityManagerInterface $em, CollectionCover $cover): Response
     {
         $collection = new Collections();
         $collection->setOwner($this->getUser());
@@ -162,6 +163,7 @@ final class CollectionsController extends AbstractController
         $form = $this->createForm(CollectionsFormType::class, $collection);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
+            $cover->apply($collection, $form->get('cover')->getData(), $form->get('coverUpload')->getData());
             $em->persist($collection);
             $em->flush();
 
@@ -470,7 +472,7 @@ final class CollectionsController extends AbstractController
 
     #[Route('/collections/{id}/edit', name: 'app_collections_edit', requirements: ['id' => '\d+'])]
     #[IsGranted('ROLE_USER')]
-    public function editCollection(Collections $collection, Request $request, EntityManagerInterface $em): Response
+    public function editCollection(Collections $collection, Request $request, EntityManagerInterface $em, CollectionCover $cover): Response
     {
         if (!$this->canEdit($collection, $this->getUser())) {
             throw $this->createAccessDeniedException();
@@ -479,6 +481,7 @@ final class CollectionsController extends AbstractController
         $form = $this->createForm(CollectionsFormType::class, $collection);
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
+            $cover->apply($collection, $form->get('cover')->getData(), $form->get('coverUpload')->getData());
             $em->flush();
 
             return $this->redirectToRoute('app_collections_show', ['id' => $collection->getId()]);

@@ -3,8 +3,8 @@
 {% set selectable = selectable|default(false) %}
 {% if selectable %}<div class="relative rounded-[28px] transition-shadow has-[:checked]:ring-2 has-[:checked]:ring-wine/70">{% endif %}
 <a href="/collections/{{ collection.id }}" class="neu group flex flex-col gap-4 rounded-[28px] p-5 transition-transform hover:-translate-y-0.5{{ selectable ? ' h-full' : '' }}"{{ selectable ? ' data-selection-inert' : '' }}>
-    <div class="inset flex h-[124px] items-center justify-center rounded-[20px]" aria-hidden="true">
-        <span class="neu-sm flex size-[72px] items-center justify-center rounded-full font-serif text-4xl font-semibold text-wine">{{ collection.name|first|upper }}</span>
+    <div class="inset flex h-[124px] items-center justify-center overflow-hidden rounded-[20px]" aria-hidden="true">
+        {% if collection.coverUrl %}<img src="{{ collection.coverUrl }}" alt="" loading="lazy" class="size-full object-cover">{% else %}<span class="flex size-[72px] items-center justify-center font-serif text-4xl font-semibold text-wine">{% if collection.visibleCategory %}<twig:ux:icon name="{{ cat.icon(collection.visibleCategory.name) }}" class="size-15" />{% else %}{{ collection.name|first|upper }}{% endif %}</span>{% endif %}
     </div>
     <div class="min-w-0">
         <h2 class="truncate text-[21px]">{{ collection.name }}</h2>

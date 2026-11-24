@@ -5,8 +5,8 @@
 {% set selectable = selectable|default(false) %}
 {% if selectable %}<div class="relative rounded-[24px] transition-shadow has-[:checked]:ring-2 has-[:checked]:ring-wine/70">{% endif %}
 <a href="/collections/{{ collection.id }}" class="neu grid grid-cols-[3.5rem_1fr] items-center gap-4 rounded-[24px] px-4 py-3 transition-[transform,padding] hover:-translate-y-0.5 group-data-[selecting]/sel:pl-14 sm:grid-cols-[3.5rem_1fr_5.5rem_1.25rem] md:grid-cols-[3.5rem_1fr_11rem_5.5rem_1.25rem] lg:grid-cols-[3.5rem_1fr_11rem_5.5rem_7rem_1.25rem]"{{ selectable ? ' data-selection-inert' : '' }}>
-    <span class="inset flex size-14 items-center justify-center rounded-2xl text-wine" aria-hidden="true">
-        {% if collection.visibleCategory %}<twig:ux:icon name="{{ cat.icon(collection.visibleCategory.name) }}" class="size-6" />{% else %}<span class="font-serif text-2xl font-semibold">{{ collection.name|first|upper }}</span>{% endif %}
+    <span class="inset flex size-14 items-center justify-center overflow-hidden rounded-2xl text-wine" aria-hidden="true">
+        {% if collection.coverUrl %}<img src="{{ collection.coverUrl }}" alt="" loading="lazy" class="size-full object-cover">{% elseif collection.visibleCategory %}<twig:ux:icon name="{{ cat.icon(collection.visibleCategory.name) }}" class="size-6" />{% else %}<span class="font-serif text-2xl font-semibold">{{ collection.name|first|upper }}</span>{% endif %}
     </span>
     <span class="min-w-0">
         <span class="block truncate text-lg font-semibold">{{ collection.name }}</span>

@@ -7,7 +7,6 @@
 {% block content %}
 <header class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex flex-col gap-1.5">
-        <span class="text-xs font-semibold uppercase tracking-[.14em] text-muted-ink">{{ isSelf ? 'Your profile' : 'Profile' }}</span>
         <h1 class="text-[46px] leading-[1.1]">{{ user.username }}</h1>
     </div>
     {% if isSelf %}
@@ -133,7 +132,7 @@
     <ul class="flex flex-col gap-3">
         {% for c in shared %}
             <li><a href="/collections/{{ c.id }}" class="flex items-center gap-4 rounded-2xl p-2 hover:bg-white/35">
-                <span class="inset flex size-12 flex-none items-center justify-center rounded-2xl font-serif text-xl text-wine" aria-hidden="true">{{ c.name|first|upper }}</span>
+                <span class="inset flex size-12 flex-none items-center justify-center overflow-hidden rounded-2xl font-serif text-xl text-wine" aria-hidden="true">{% if c.coverUrl %}<img src="{{ c.coverUrl }}" alt="" loading="lazy" class="size-full object-cover">{% elseif c.visibleCategory %}<twig:ux:icon name="{{ cat.icon(c.visibleCategory.name) }}" class="size-6" />{% else %}{{ c.name|first|upper }}{% endif %}</span>
                 <span class="min-w-0"><span class="block truncate font-semibold">{{ c.name }}</span><span class="block text-sm text-muted-ink">By {{ c.owner.username }}</span></span>
             </a></li>
         {% endfor %}

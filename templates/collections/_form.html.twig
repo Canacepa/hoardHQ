@@ -1,7 +1,60 @@
-<section{% if deletable is defined and deletable %} data-controller="dialog"{% endif %} class="neu max-w-xl rounded-[32px] p-7 [&_label]:mb-1 [&_label]:block [&_label]:text-sm [&_label]:font-semibold [&_div]:mb-4 [&_:is(input:not([type=checkbox]),textarea,select)]:inset [&_:is(input:not([type=checkbox]),textarea,select)]:w-full [&_:is(input:not([type=checkbox]),textarea,select)]:px-5 [&_:is(input:not([type=checkbox]),textarea,select)]:outline-none [&_:is(input:not([type=checkbox]),textarea,select)]:focus-visible:ring-2 [&_:is(input:not([type=checkbox]),textarea,select)]:focus-visible:ring-wine/40 [&_:is(input:not([type=checkbox]),select)]:h-[54px] [&_:is(input:not([type=checkbox]),select)]:rounded-full [&_textarea]:min-h-28 [&_textarea]:resize-none [&_textarea]:rounded-[24px] [&_textarea]:py-3">
+{% import '_macros/category.html.twig' as cat %}
+<section{% if deletable is defined and deletable %} data-controller="dialog"{% endif %} class="neu max-w-6xl rounded-[32px] p-7 [&_label]:mb-1 [&_label]:block [&_label]:text-sm [&_label]:font-semibold [&_div]:mb-4 [&_:is(input:not([type=checkbox],[type=radio],[type=file]),textarea,select)]:inset [&_:is(input:not([type=checkbox],[type=radio],[type=file]),textarea,select)]:w-full [&_:is(input:not([type=checkbox],[type=radio],[type=file]),textarea,select)]:px-5 [&_:is(input:not([type=checkbox],[type=radio],[type=file]),textarea,select)]:outline-none [&_:is(input:not([type=checkbox],[type=radio],[type=file]),textarea,select)]:focus-visible:ring-2 [&_:is(input:not([type=checkbox],[type=radio],[type=file]),textarea,select)]:focus-visible:ring-wine/40 [&_:is(input:not([type=checkbox],[type=radio],[type=file]),select)]:h-[54px] [&_:is(input:not([type=checkbox],[type=radio],[type=file]),select)]:rounded-full [&_textarea]:min-h-28 [&_textarea]:resize-none [&_textarea]:rounded-[24px] [&_textarea]:py-3">
     {% set deletable = deletable ?? null %}
     {{ form_start(form) }}
-    {{ form_widget(form) }}
+    {# Two columns from tablet width up: the fields on the left, the cover on the right (wider on desktop). #}
+    <div class="mb-0! grid items-start gap-x-10 md:grid-cols-[minmax(0,1fr)_20rem] lg:grid-cols-[minmax(0,1fr)_28rem]">
+        <div class="mb-0! min-w-0">
+            {{ form_row(form.name) }}
+            {{ form_row(form.description) }}
+            {{ form_row(form.category) }}
+            {{ form_row(form.public) }}
+        </div>
+
+        {# The cover fields are drawn as one group, here, instead of one row each. A picture can be dropped anywhere on it. #}
+        {% set stored = form.vars.data is not null ? form.vars.data.thumbnail : null %}
+        {% set initial = form.vars.data is not null and form.vars.data.name ? form.vars.data.name|first|upper : '?' %}
+        <fieldset data-controller="cover" data-action="dragover->cover#over dragleave->cover#leave drop->cover#drop" class="mb-4 min-w-0 md:border-l md:border-ink/10 md:pl-10">
+            <legend class="mb-2 text-sm font-semibold">Cover</legend>
+
+            <label data-cover-target="zone" class="mb-0! flex! min-h-64 cursor-pointer flex-col items-center justify-center gap-2 rounded-[24px] border-2 border-dashed border-ink/25 p-5 text-center font-normal! text-muted-ink transition-colors focus-within:ring-2 focus-within:ring-wine/40 data-[over]:border-wine data-[over]:bg-wine/10">
+                <img data-cover-target="preview" src="{{ stored ? '/uploads/covers/' ~ stored : '' }}" alt="Selected picture"{% if not stored %} hidden{% endif %} class="max-h-44 rounded-xl object-cover">
+                <span class="text-sm">Drag a picture here, or <span class="font-semibold text-wine underline underline-offset-2">choose a file</span></span>
+                <span class="text-xs">JPEG, PNG or WebP, up to 5 MB</span>
+                {{ form_widget(form.coverUpload, {attr: {accept: 'image/jpeg,image/png,image/webp', class: 'sr-only', 'data-cover-target': 'file', 'data-action': 'change->cover#preview'}}) }}
+            </label>
+            <p data-cover-target="message" role="alert" hidden class="mb-0! mt-2 text-sm text-destructive"></p>
+            {{ form_errors(form.coverUpload) }}
+
+            <p class="mb-1 mt-5 text-sm font-semibold">Or pick one</p>
+            {# One list for the default icon, the saved picture and the items; it closes when something is picked. #}
+            <details data-cover-target="menu" data-action="change->cover#choose" class="relative mb-0!">
+                <summary class="inset mb-0! flex h-[64px] cursor-pointer list-none items-center gap-3 rounded-full py-2 pl-3 pr-5 outline-none focus-visible:ring-2 focus-visible:ring-wine/40 [&::-webkit-details-marker]:hidden">
+                    <span data-cover-target="thumb" class="neu-sm flex h-12 w-9 flex-none items-center justify-center overflow-hidden rounded-lg text-wine"></span>
+                    <span data-cover-target="current" class="min-w-0 flex-1 truncate font-semibold"></span>
+                    <twig:ux:icon name="heroicons:chevron-down" class="size-5 flex-none text-muted-ink" />
+                </summary>
+                <div class="neu absolute z-20 mb-0! mt-2 max-h-80 w-full overflow-y-auto rounded-[24px] p-2">
+                    {% for option in form.cover %}
+                        {% set value = option.vars.value %}
+                        <label data-label="{{ option.vars.label }}" class="mb-0! block cursor-pointer rounded-xl p-2 font-normal! hover:bg-white/40 has-[:checked]:bg-wine/10 has-[:checked]:font-semibold!"
+                            {%- if value == 'upload' %} data-cover-target="uploadOption" data-stored="{{ stored ? 1 : 0 }}"{% if not stored %} hidden{% endif %}{% endif %}>
+                            {{ form_widget(option, {attr: {class: 'sr-only'}}) }}
+                            <span class="flex items-center gap-3">
+                                <span data-thumb class="inset flex h-12 w-9 flex-none items-center justify-center overflow-hidden rounded-lg text-wine">
+                                    {%- if value == 'default' %}{% if form.vars.data is not null and form.vars.data.visibleCategory %}<twig:ux:icon name="{{ cat.icon(form.vars.data.visibleCategory.name) }}" class="size-5" />{% else %}<span class="font-serif text-lg font-semibold">{{ initial }}</span>{% endif %}
+                                    {%- elseif value == 'upload' %}<img data-cover-target="uploadThumb" src="{{ stored ? '/uploads/covers/' ~ stored : '' }}" alt="" class="size-full object-cover">
+                                    {%- else %}<img src="{{ option.vars.attr['data-poster'] }}" alt="" loading="lazy" class="size-full object-cover">{% endif -%}
+                                </span>
+                                <span class="min-w-0 flex-1 truncate">{{ option.vars.label }}</span>
+                            </span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </details>
+        </fieldset>
+    </div>
+    {{ form_rest(form) }}
     {# mb-0! because the section above adds a bottom margin to every div. The row is right-aligned on both pages: the submit
        button at the far right, with Delete collection before it for the owner on the edit page. #}
     <div class="mb-0! mt-2 flex flex-wrap items-center justify-end gap-3">
