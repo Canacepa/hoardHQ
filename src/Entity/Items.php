@@ -97,6 +97,16 @@ class Items
     }
 
     /**
+     * Platforms a game is available on, as the provider names them.
+     *
+     * @return list<string>
+     */
+    public function getPlatforms(): array
+    {
+        return $this->attributes['platforms'] ?? [];
+    }
+
+    /**
      * Regular seasons of a TV show with their episode counts; empty for movies and for shows imported without season data.
      *
      * @return list<array{number: int, name: string, episodes: int}>

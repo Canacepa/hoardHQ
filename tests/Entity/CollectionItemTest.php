@@ -116,4 +116,21 @@ final class CollectionItemTest extends TestCase
         }
         $this->assertSame([0, CollectionItem::WANT], [$entry->getWatchedTotal(), $entry->getStatus()]);
     }
+
+    public function testAGameIsWantedOrOwnedOnAPlatformAndClearingTheStatusDropsThePlatform(): void
+    {
+        $entry = (new CollectionItem())->setItem((new Items())->setName('Zelda')->setAttributes(['type' => 'game', 'platforms' => ['NES', 'Switch']]));
+        $this->assertNull($entry->getStatusLabel());
+
+        $entry->applyStatus(CollectionItem::WANT);
+        $this->assertSame('Wanted', $entry->getStatusLabel());
+
+        $entry->applyStatus(CollectionItem::OWNED);
+        $entry->setPlatform('Switch');
+        $this->assertSame('Owned · Switch', $entry->getStatusLabel());
+
+        $entry->applyStatus(null);
+        $this->assertNull($entry->getPlatform());
+        $this->assertNull($entry->getStatusLabel());
+    }
 }

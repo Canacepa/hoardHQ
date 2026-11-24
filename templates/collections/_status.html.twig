@@ -57,14 +57,27 @@
         {% elseif canEdit %}
             <div class="flex flex-wrap gap-3">
                 {# Clicking the active status clears it. #}
-                {% for value, text in {want: 'Wanna watch', watched: 'Watched'} %}
+                {% for value, text in collection.statusOptions %}
                     <form method="post" data-action="submit->status#save" action="{{ path('app_items_status', {id: collection.id, entry: eid}) }}">
                         <input type="hidden" name="_token" value="{{ csrf_token('status' ~ collection.id) }}">
                         <input type="hidden" name="status" value="{{ entry.status == value ? '' : value }}">
-                        <twig:Button type="submit" variant="{{ entry.status == value ? 'wine' : 'neu' }}" size="pill" aria-pressed="{{ entry.status == value ? 'true' : 'false' }}"><twig:ux:icon name="heroicons:{{ value == 'watched' ? 'check-circle' : 'bookmark' }}" class="size-4" />{{ text }}</twig:Button>
+                        <twig:Button type="submit" variant="{{ entry.status == value ? 'wine' : 'neu' }}" size="pill" aria-pressed="{{ entry.status == value ? 'true' : 'false' }}"><twig:ux:icon name="heroicons:{{ value == 'want' ? 'bookmark' : 'check-circle' }}" class="size-4" />{{ text }}</twig:Button>
                     </form>
                 {% endfor %}
             </div>
+            {% if collection.importType == 'game' and entry.status and entry.item.platforms %}
+                {# Sub-status: which platform this is for. Clicking the active one clears it. #}
+                <h3 class="{{ label }} mt-2">Platform</h3>
+                <div class="flex flex-wrap gap-2">
+                    {% for platform in entry.item.platforms %}
+                        <form method="post" data-action="submit->status#save" action="{{ path('app_items_platform', {id: collection.id, entry: eid}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('status' ~ collection.id) }}">
+                            <input type="hidden" name="platform" value="{{ entry.platform == platform ? '' : platform }}">
+                            <twig:Button type="submit" variant="{{ entry.platform == platform ? 'wine' : 'neu' }}" size="pill" aria-pressed="{{ entry.platform == platform ? 'true' : 'false' }}" class="h-9 px-4 text-xs">{{ platform }}</twig:Button>
+                        </form>
+                    {% endfor %}
+                </div>
+            {% endif %}
         {% else %}
             <p class="font-semibold">{{ entry.statusLabel }}</p>
         {% endif %}

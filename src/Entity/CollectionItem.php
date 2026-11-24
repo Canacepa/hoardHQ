@@ -13,7 +13,8 @@ class CollectionItem
 {
     public const WANT = 'want';
     public const WATCHED = 'watched';
-    public const STATUSES = [self::WANT, self::WATCHED];
+    public const OWNED = 'owned';
+    public const STATUSES = [self::WANT, self::WATCHED, self::OWNED];
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -35,9 +36,13 @@ class CollectionItem
     #[ORM\Column(name: 'item_condition', length: 50, nullable: true)]
     private ?string $condition = null;
 
-    /** Watch state for movies and TV shows: one of STATUSES, or null when not set. */
+    /** Watch state for movies and TV (want, watched) or ownership of a game (want, owned): one of STATUSES, or null when not set. */
     #[ORM\Column(length: 20, nullable: true)]
     private ?string $status = null;
+
+    /** Games: the platform this entry is for, one of the item's platforms. Only set together with a status. */
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $platform = null;
 
     /**
      * Episodes watched, for TV shows with season data: season number => episode numbers.
@@ -100,8 +105,25 @@ class CollectionItem
         return $this;
     }
 
+    public function getPlatform(): ?string
+    {
+        return $this->platform;
+    }
+
+    public function setPlatform(?string $platform): static
+    {
+        $this->platform = $platform;
+
+        return $this;
+    }
+
     public function getStatusLabel(): ?string
     {
+        if (($this->item?->getAttributes()['type'] ?? null) === 'game') {
+            $label = ['want' => 'Wanted', 'owned' => 'Owned'][$this->status ?? ''] ?? null;
+
+            return $label && $this->platform ? "$label · $this->platform" : $label;
+        }
         if ($this->status === self::WATCHED) {
             return 'Watched';
         }
@@ -127,6 +149,9 @@ class CollectionItem
             }
         }
         $this->status = $status;
+        if ($status === null) {
+            $this->platform = null; // the platform is a sub-status: it goes with the status
+        }
     }
 
     /** True for TV shows imported with season data: those are tracked per season and episode instead of a plain status. */

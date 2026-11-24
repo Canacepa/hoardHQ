@@ -22,7 +22,11 @@ final class EntrySorter
     /** @return array<string, string> the sorts that make sense for this collection */
     public function optionsFor(Collections $collection): array
     {
-        return $collection->hasStatus() ? self::SORTS : array_diff_key(self::SORTS, ['status' => true]);
+        if (!$collection->hasStatus()) {
+            return array_diff_key(self::SORTS, ['status' => true]);
+        }
+
+        return $collection->getImportType() === 'game' ? ['status' => 'Wanted first'] + self::SORTS : self::SORTS;
     }
 
     /** The sort to use for a value from the query string: itself when this collection offers it, otherwise the default. */
@@ -67,7 +71,7 @@ final class EntrySorter
     private static function statusRank(CollectionItem $entry): int
     {
         return match (true) {
-            $entry->getStatus() === CollectionItem::WATCHED => 3,
+            $entry->getStatus() === CollectionItem::WATCHED, $entry->getStatus() === CollectionItem::OWNED => 3,
             $entry->getWatchedTotal() > 0 => 1,
             $entry->getStatus() === CollectionItem::WANT => 0,
             default => 2,

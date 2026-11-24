@@ -142,10 +142,23 @@ class Collections
         };
     }
 
-    /** Whether entries carry a watch status: movies and TV only. */
+    /**
+     * The statuses an entry can have, value => label: watch state for movies and TV, ownership for games.
+     *
+     * @return array<string, string>
+     */
+    public function getStatusOptions(): array
+    {
+        return match ($this->getImportType()) {
+            'movie', 'tv' => ['want' => 'Wanna watch', 'watched' => 'Watched'],
+            'game' => ['want' => 'Wanted', 'owned' => 'Owned'],
+            default => [],
+        };
+    }
+
     public function hasStatus(): bool
     {
-        return \in_array($this->getImportType(), ['movie', 'tv'], true);
+        return $this->getStatusOptions() !== [];
     }
 
     /** Whether items can be added at all. */

@@ -22,7 +22,9 @@ final class CollectionsTest extends TestCase
         $this->assertSame('game', $this->in('Video Games')->getImportType());
         $this->assertTrue($this->in('Movies')->isImportable());
         $this->assertTrue($this->in('Movies')->hasStatus());
-        $this->assertFalse($this->in('Video Games')->hasStatus(), 'games are not watched');
+        $this->assertSame(['want', 'owned'], array_keys($this->in('Video Games')->getStatusOptions()));
+        $this->assertSame(['want', 'watched'], array_keys($this->in('TV Shows')->getStatusOptions()));
+        $this->assertFalse($this->in('Books')->hasStatus());
     }
 
     public function testCategoriesWithoutAnItemApiCannotImport(): void

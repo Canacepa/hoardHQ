@@ -221,10 +221,29 @@ final class CollectionsController extends AbstractController
         $item = $this->entryToUpdate($collection, $entry, $request, $entries);
 
         $status = $request->getPayload()->getString('status');
-        if ($status !== '' && !\in_array($status, CollectionItem::STATUSES, true)) {
+        if ($status !== '' && !isset($collection->getStatusOptions()[$status])) {
             throw new BadRequestHttpException();
         }
         $item->applyStatus($status ?: null);
+        $collection->touch();
+        $em->flush();
+
+        return $this->redirectToRoute('app_collections_show', ['id' => $collection->getId()]);
+    }
+
+    /** Games: sets the platform of an entry that has a status (empty = none). It must be one of the game's platforms. */
+    #[Route('/collections/{id}/items/{entry}/platform', name: 'app_items_platform', requirements: ['id' => '\d+', 'entry' => '\d+'], methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function setItemPlatform(Collections $collection, int $entry, Request $request, EntityManagerInterface $em, CollectionItemRepository $entries): Response
+    {
+        $item = $this->entryToUpdate($collection, $entry, $request, $entries);
+
+        $platform = $request->getPayload()->getString('platform');
+        if ($collection->getImportType() !== 'game' || $item->getStatus() === null
+            || ($platform !== '' && !\in_array($platform, $item->getItem()->getPlatforms(), true))) {
+            throw new BadRequestHttpException();
+        }
+        $item->setPlatform($platform ?: null);
         $collection->touch();
         $em->flush();
 
@@ -315,9 +334,8 @@ final class CollectionsController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $statuses = ['want' => CollectionItem::WANT, 'watched' => CollectionItem::WATCHED, 'clear' => null];
         $action = $request->getPayload()->getString('action');
-        if ($action !== 'remove' && !\array_key_exists($action, $statuses)) {
+        if ($action !== 'remove' && $action !== 'clear' && !isset($collection->getStatusOptions()[$action])) {
             throw new BadRequestHttpException();
         }
         if ($action !== 'remove' && !$collection->hasStatus()) {
@@ -327,7 +345,7 @@ final class CollectionsController extends AbstractController
         $ids = array_filter($request->getPayload()->all('entry'), static fn ($id) => \is_string($id) && ctype_digit($id));
         // Scoped to this collection, so ids belonging to other collections are ignored.
         foreach ($ids ? $entries->findBy(['collection' => $collection, 'id' => $ids]) : [] as $entry) {
-            $action === 'remove' ? $em->remove($entry) : $entry->applyStatus($statuses[$action]);
+            $action === 'remove' ? $em->remove($entry) : $entry->applyStatus($action === 'clear' ? null : $action);
         }
         $collection->touch();
         $em->flush();
