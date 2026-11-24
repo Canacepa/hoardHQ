@@ -91,7 +91,7 @@ final class UserController extends AbstractController
             'collections' => $collections,
             'categories' => $categories,
             'category' => $category,
-            'view' => $grouper->viewFrom($request->query->getString('view'), 'grid'),
+            'view' => $grouper->viewFrom($request->query->getString('view'), 'list'),
         ] + $grouper->group($collections));
     }
 

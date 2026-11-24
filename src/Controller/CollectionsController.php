@@ -57,7 +57,7 @@ final class CollectionsController extends AbstractController
             'collections' => $collections,
             'categories' => $grouper->categories($all),
             'category' => $category,
-            'view' => $grouper->viewFrom($request->query->getString('view'), 'grouped'),
+            'view' => $grouper->viewFrom($request->query->getString('view'), 'list'),
         ] + $grouper->group($collections));
     }
 
